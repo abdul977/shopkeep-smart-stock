@@ -26,7 +26,7 @@ import { Product } from "@/types/inventory";
 const Products = () => {
   const { products, categories } = useInventory();
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
@@ -38,9 +38,9 @@ const Products = () => {
       (product.barcode &&
         product.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesCategory = categoryFilter
-      ? product.categoryId === categoryFilter
-      : true;
+    const matchesCategory = categoryFilter === "all"
+      ? true
+      : product.categoryId === categoryFilter;
 
     return matchesSearch && matchesCategory;
   });
@@ -77,7 +77,7 @@ const Products = () => {
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}

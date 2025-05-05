@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
 import { Input } from "@/components/ui/input";
@@ -17,8 +16,8 @@ import { Product } from "@/types/inventory";
 const Inventory = () => {
   const { products, categories } = useInventory();
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [stockFilter, setStockFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
   const [updatingProduct, setUpdatingProduct] = useState<Product | null>(null);
 
   // Filter products based on search term, category, and stock level
@@ -27,16 +26,16 @@ const Inventory = () => {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesCategory = categoryFilter
-      ? product.categoryId === categoryFilter
-      : true;
+    const matchesCategory = categoryFilter === "all"
+      ? true
+      : product.categoryId === categoryFilter;
 
-    const matchesStock = stockFilter
-      ? stockFilter === "low"
-        ? product.quantityInStock <= product.minStockLevel
-        : stockFilter === "out"
-        ? product.quantityInStock === 0
-        : true
+    const matchesStock = stockFilter === "all"
+      ? true
+      : stockFilter === "low"
+      ? product.quantityInStock <= product.minStockLevel
+      : stockFilter === "out"
+      ? product.quantityInStock === 0
       : true;
 
     return matchesSearch && matchesCategory && matchesStock;
@@ -63,7 +62,7 @@ const Inventory = () => {
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
@@ -77,7 +76,7 @@ const Inventory = () => {
               <SelectValue placeholder="Filter by stock level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Stock Levels</SelectItem>
+              <SelectItem value="all">All Stock Levels</SelectItem>
               <SelectItem value="low">Low Stock</SelectItem>
               <SelectItem value="out">Out of Stock</SelectItem>
             </SelectContent>
