@@ -32,7 +32,11 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Set up your environment variables.
+# Copy the .env.example file to .env and update with your Supabase credentials
+cp .env.example .env
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
@@ -59,6 +63,7 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (for database and authentication)
 
 ## How can I deploy this project?
 
@@ -71,3 +76,23 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Supabase Integration
+
+This project uses Supabase for database storage. To set up your own Supabase instance:
+
+1. Create an account at [Supabase](https://supabase.com/)
+2. Create a new project
+3. Get your project URL and anon key from the API settings
+4. Add these to your `.env` file:
+
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+The database schema includes the following tables:
+- `categories`: For storing product categories
+- `products`: For storing product information
+
+The application will automatically connect to your Supabase instance and use these tables for data storage.

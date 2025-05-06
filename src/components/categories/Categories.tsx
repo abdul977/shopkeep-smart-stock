@@ -2,6 +2,7 @@
 import { useInventory } from "@/contexts/InventoryContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 const Categories = () => {
   const { categories, getProductsByCategory, getCategoryValue } = useInventory();
@@ -14,7 +15,7 @@ const Categories = () => {
         {categories.map((category) => {
           const products = getProductsByCategory(category.id);
           const categoryValue = getCategoryValue(category.id);
-          
+
           return (
             <Card key={category.id}>
               <CardHeader className="pb-2">
@@ -27,17 +28,17 @@ const Categories = () => {
                 <p className="text-sm text-gray-500 mb-4">
                   {category.description || "No description available"}
                 </p>
-                
+
                 <div className="flex justify-between text-sm font-medium">
                   <div>Products:</div>
                   <div>{products.length}</div>
                 </div>
-                
+
                 <div className="flex justify-between text-sm font-medium mt-1">
                   <div>Total Value:</div>
-                  <div>${categoryValue.toFixed(2)}</div>
+                  <div>{formatCurrency(categoryValue)}</div>
                 </div>
-                
+
                 <div className="mt-4">
                   <div className="text-xs font-medium text-gray-500 mb-1">
                     Stock Distribution

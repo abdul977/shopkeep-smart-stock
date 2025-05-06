@@ -22,6 +22,7 @@ import { Search, Plus, Package } from "lucide-react";
 import AddProductDialog from "./AddProductDialog";
 import EditProductDialog from "./EditProductDialog";
 import { Product } from "@/types/inventory";
+import { formatCurrency } from "@/lib/utils";
 
 const Products = () => {
   const { products, categories } = useInventory();
@@ -118,7 +119,7 @@ const Products = () => {
                       </TableCell>
                       <TableCell className="text-sm">{product.sku}</TableCell>
                       <TableCell>{category?.name}</TableCell>
-                      <TableCell>${product.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell>{formatCurrency(product.unitPrice)}</TableCell>
                       <TableCell>
                         <span
                           className={

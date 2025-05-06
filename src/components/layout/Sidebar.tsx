@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Package,
@@ -9,15 +9,52 @@ import {
   X,
   Tag,
   Home,
+  LogOut,
+  ShoppingCart,
+  Copy,
+  ExternalLink,
+  QrCode,
+  Share2,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "sonner";
+import ShareShopDialog from "./ShareShopDialog";
 
 interface SidebarProps {
   activePage: string;
   setActivePage: (page: string) => void;
+  isMobileMenuOpen?: boolean;
+  setIsMobileMenuOpen?: (isOpen: boolean) => void;
 }
 
-const Sidebar = ({ activePage, setActivePage }: SidebarProps) => {
+const Sidebar = ({
+  activePage,
+  setActivePage,
+  isMobileMenuOpen = false,
+  setIsMobileMenuOpen
+}: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Check if screen is mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
@@ -28,11 +65,124 @@ const Sidebar = ({ activePage, setActivePage }: SidebarProps) => {
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const copyShopLink = () => {
+    const shopUrl = `${window.location.origin}/shop`;
+    navigator.clipboard.writeText(shopUrl)
+      .then(() => {
+        toast.success("Shop link copied to clipboard!");
+      })
+      .catch(() => {
+        toast.error("Failed to copy link");
+      });
+  };
+
+  const openShopInNewTab = () => {
+    const shopUrl = `${window.location.origin}/shop`;
+    window.open(shopUrl, '_blank');
+  };
+
+  // Handle mobile menu toggle
+  const handleMobileMenuToggle = () => {
+    if (setIsMobileMenuOpen) {
+      setIsMobileMenuOpen(!isMobileMenuOpen);
+    }
+  };
+
+  // Handle navigation item click on mobile
+  const handleNavItemClick = (pageId: string) => {
+    setActivePage(pageId);
+    if (isMobile && setIsMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  // Render mobile sidebar
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile Sidebar - Slide in from left */}
+        <div
+          className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ${
+            isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={handleMobileMenuToggle}
+        />
+
+        <div
+          className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out shadow-lg ${
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          } flex flex-col`}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="text-xl font-bold text-inventory-primary">SmartStock</div>
+            <button
+              onClick={handleMobileMenuToggle}
+              className="p-2 rounded-md hover:bg-gray-100"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-grow py-6 overflow-y-auto">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleNavItemClick(item.id)}
+                className={`w-full flex items-center p-3 px-6 mb-1 ${
+                  activePage === item.id
+                    ? "bg-blue-50 text-inventory-primary border-r-4 border-inventory-primary"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <item.icon size={20} />
+                <span className="ml-3">{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="p-4 border-t border-gray-200 space-y-3">
+            <div className="flex flex-col space-y-2">
+              <button
+                onClick={openShopInNewTab}
+                className="w-full flex items-center p-3 text-green-600 hover:bg-green-50 rounded-md"
+              >
+                <ShoppingCart size={20} />
+                <span className="ml-3">Open Shop</span>
+              </button>
+
+              <button
+                onClick={() => setShareDialogOpen(true)}
+                className="w-full flex items-center p-3 text-blue-600 hover:bg-blue-50 rounded-md"
+              >
+                <Share2 size={20} />
+                <span className="ml-3">Share Shop</span>
+              </button>
+            </div>
+
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center p-3 text-red-500 hover:bg-red-50 rounded-md"
+            >
+              <LogOut size={20} />
+              <span className="ml-3">Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Render desktop sidebar
   return (
     <div
       className={`${
         collapsed ? "w-16" : "w-64"
-      } bg-white border-r border-gray-200 h-screen transition-all duration-300 flex flex-col shadow-sm`}
+      } bg-white border-r border-gray-200 h-screen transition-all duration-300 flex flex-col shadow-sm hidden md:flex`}
     >
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!collapsed && (
@@ -63,6 +213,45 @@ const Sidebar = ({ activePage, setActivePage }: SidebarProps) => {
             {!collapsed && <span className="ml-3">{item.label}</span>}
           </button>
         ))}
+      </div>
+
+      <div className="p-4 border-t border-gray-200 space-y-3">
+        <div className="flex flex-col space-y-2">
+          <button
+            onClick={openShopInNewTab}
+            className={`w-full flex items-center p-3 text-green-600 hover:bg-green-50 rounded-md ${
+              collapsed ? "justify-center" : ""
+            }`}
+          >
+            <ShoppingCart size={20} />
+            {!collapsed && <span className="ml-3">Open Shop</span>}
+          </button>
+
+          <button
+            onClick={() => setShareDialogOpen(true)}
+            className={`w-full flex items-center p-3 text-blue-600 hover:bg-blue-50 rounded-md ${
+              collapsed ? "justify-center" : ""
+            }`}
+          >
+            <Share2 size={20} />
+            {!collapsed && <span className="ml-3">Share Shop</span>}
+          </button>
+        </div>
+
+        <button
+          onClick={handleSignOut}
+          className={`w-full flex items-center p-3 text-red-500 hover:bg-red-50 rounded-md ${
+            collapsed ? "justify-center" : ""
+          }`}
+        >
+          <LogOut size={20} />
+          {!collapsed && <span className="ml-3">Sign Out</span>}
+        </button>
+
+        <ShareShopDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+        />
       </div>
     </div>
   );

@@ -22,3 +22,38 @@ export type Product = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type StoreSettings = {
+  id: string;
+  storeName: string;
+  location?: string;
+  phoneNumber?: string;
+  logoUrl?: string;
+  businessHours?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TransactionType = "purchase" | "sale" | "adjustment" | "return";
+
+export type StockTransaction = {
+  id: string;
+  productId: string;
+  quantity: number;
+  transactionType: TransactionType;
+  notes?: string;
+  transactionDate: Date;
+  createdAt: Date;
+};
+
+export type ReportType = "inventory" | "sales" | "stock_level" | "category";
+
+export type Report = {
+  id: string;
+  title: string;
+  description?: string;
+  reportType: ReportType;
+  data: any;
+  createdAt: Date;
+  updatedAt: Date;
+};

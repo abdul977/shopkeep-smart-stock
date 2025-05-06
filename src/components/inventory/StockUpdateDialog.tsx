@@ -1,11 +1,19 @@
 
 import { useState } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
-import { Product } from "@/types/inventory";
+import { Product, TransactionType } from "@/types/inventory";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
 interface StockUpdateDialogProps {
@@ -19,6 +27,8 @@ const StockUpdateDialog = ({ product, open, onOpenChange }: StockUpdateDialogPro
   const [quantity, setQuantity] = useState(product.quantityInStock);
   const [updateType, setUpdateType] = useState<"set" | "add" | "remove">("set");
   const [changeAmount, setChangeAmount] = useState(1);
+  const [transactionType, setTransactionType] = useState<TransactionType>("adjustment");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,15 +52,24 @@ const StockUpdateDialog = ({ product, open, onOpenChange }: StockUpdateDialogPro
   };
 
   const handleSubmit = () => {
+    let newQuantity = quantity;
+    let actualTransactionType = transactionType;
+
     if (updateType === "set") {
-      updateProductStock(product.id, quantity);
+      newQuantity = quantity;
+      // If setting to a specific value, always use adjustment
+      actualTransactionType = "adjustment";
     } else if (updateType === "add") {
-      updateProductStock(product.id, product.quantityInStock + changeAmount);
+      newQuantity = product.quantityInStock + changeAmount;
+      // If adding stock, use purchase or return based on transaction type
+      actualTransactionType = transactionType === "adjustment" ? "purchase" : transactionType;
     } else if (updateType === "remove") {
-      const newQuantity = Math.max(0, product.quantityInStock - changeAmount);
-      updateProductStock(product.id, newQuantity);
+      newQuantity = Math.max(0, product.quantityInStock - changeAmount);
+      // If removing stock, use sale or adjustment based on transaction type
+      actualTransactionType = transactionType === "purchase" ? "sale" : transactionType;
     }
-    
+
+    updateProductStock(product.id, newQuantity, actualTransactionType, notes);
     onOpenChange(false);
   };
 
@@ -60,7 +79,7 @@ const StockUpdateDialog = ({ product, open, onOpenChange }: StockUpdateDialogPro
         <DialogHeader>
           <DialogTitle>Update Stock for {product.name}</DialogTitle>
         </DialogHeader>
-        
+
         <div className="py-4 space-y-4">
           <div className="flex space-x-2">
             <Button
@@ -85,7 +104,7 @@ const StockUpdateDialog = ({ product, open, onOpenChange }: StockUpdateDialogPro
               <ArrowDown className="h-4 w-4 mr-1" /> Remove
             </Button>
           </div>
-          
+
           {updateType === "set" ? (
             <div className="space-y-2">
               <Label htmlFor="quantity">New Stock Quantity</Label>
@@ -127,10 +146,38 @@ const StockUpdateDialog = ({ product, open, onOpenChange }: StockUpdateDialogPro
               </p>
             </div>
           )}
-          
+
+          <div className="space-y-2">
+            <Label htmlFor="transactionType">Transaction Type</Label>
+            <Select
+              value={transactionType}
+              onValueChange={(value) => setTransactionType(value as TransactionType)}
+            >
+              <SelectTrigger id="transactionType">
+                <SelectValue placeholder="Select transaction type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="purchase">Purchase</SelectItem>
+                <SelectItem value="sale">Sale</SelectItem>
+                <SelectItem value="adjustment">Adjustment</SelectItem>
+                <SelectItem value="return">Return</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea
+              id="notes"
+              placeholder="Add any notes about this stock update"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
           {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel

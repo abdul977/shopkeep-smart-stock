@@ -1,7 +1,8 @@
 
 import { useInventory } from "@/contexts/InventoryContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Package, AlertTriangle, DollarSign } from "lucide-react";
+import { BarChart, Package, AlertTriangle, BanknoteIcon } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 const Dashboard = () => {
   const { products, categories, getLowStockProducts, getTotalInventoryValue } =
@@ -9,11 +10,11 @@ const Dashboard = () => {
 
   const lowStockProducts = getLowStockProducts();
   const totalValue = getTotalInventoryValue();
-  
+
   return (
     <div className="p-6 animate-fade-in">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -27,7 +28,7 @@ const Dashboard = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Low Stock Items</CardTitle>
@@ -40,20 +41,20 @@ const Dashboard = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Inventory Value</CardTitle>
-            <DollarSign className="h-5 w-5 text-inventory-success" />
+            <BanknoteIcon className="h-5 w-5 text-inventory-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">${totalValue.toFixed(2)}</div>
+            <div className="text-3xl font-bold">{formatCurrency(totalValue)}</div>
             <p className="text-xs text-gray-500 mt-1">
               Total stock value
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Categories</CardTitle>
@@ -67,7 +68,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -102,7 +103,7 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Category Breakdown</CardTitle>
@@ -122,10 +123,10 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-inventory-primary h-2 rounded-full" 
-                        style={{ 
-                          width: `${(categoryProducts.length / products.length) * 100}%` 
+                      <div
+                        className="bg-inventory-primary h-2 rounded-full"
+                        style={{
+                          width: `${(categoryProducts.length / products.length) * 100}%`
                         }}
                       ></div>
                     </div>
