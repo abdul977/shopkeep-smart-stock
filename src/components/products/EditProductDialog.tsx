@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Image, Upload } from "lucide-react";
+import { Image, Upload, X, RefreshCw } from "lucide-react";
 
 interface EditProductDialogProps {
   product: Product;
@@ -96,7 +96,7 @@ const EditProductDialog = ({ product, open, onOpenChange }: EditProductDialogPro
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.sku.trim()) newErrors.sku = "SKU is required";
+    // SKU is read-only, so no need to validate
     if (!formData.categoryId) newErrors.categoryId = "Category is required";
     if (!formData.unitPrice || isNaN(parseFloat(formData.unitPrice))) {
       newErrors.unitPrice = "Valid price is required";
@@ -168,14 +168,17 @@ const EditProductDialog = ({ product, open, onOpenChange }: EditProductDialogPro
               </div>
 
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="sku">SKU*</Label>
+                <Label htmlFor="sku">SKU* (Auto-generated)</Label>
                 <Input
                   id="sku"
                   name="sku"
                   value={formData.sku}
-                  onChange={handleChange}
-                  className={`h-8 sm:h-10 text-sm ${errors.sku ? "border-red-500" : ""}`}
+                  readOnly
+                  className={`h-8 sm:h-10 text-sm bg-gray-50 ${errors.sku ? "border-red-500" : ""}`}
                 />
+                <p className="text-xs text-gray-500">
+                  SKU cannot be changed after product creation.
+                </p>
                 {errors.sku && (
                   <p className="text-xs text-red-500">{errors.sku}</p>
                 )}
