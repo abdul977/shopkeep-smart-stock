@@ -33,10 +33,10 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
-  // If user is already logged in, redirect to home
+  // If user is already logged in, redirect to dashboard
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
@@ -75,8 +75,8 @@ const Login = () => {
       console.log("Attempting login with email:", data.email);
 
       await signIn(data.email, data.password);
-      // Navigate to home page after successful login
-      navigate("/");
+      // Navigate to dashboard after successful login
+      navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
 

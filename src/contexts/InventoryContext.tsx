@@ -4,6 +4,8 @@ import { Product, Category, Unit, StockTransaction, TransactionType, Report, Rep
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
+import { useAuth } from "@/contexts/AuthContext";
+import { categories as mockCategories, products as mockProducts } from "@/data/mockData";
 
 interface InventoryContextType {
   products: Product[];
@@ -31,6 +33,7 @@ interface InventoryContextType {
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<StockTransaction[]>([]);
@@ -38,11 +41,24 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If user is not authenticated, use mock data for public display
+    if (!user) {
+      setProducts(mockProducts);
+      setCategories(mockCategories);
+      setTransactions([]);
+      setReports([]);
+      setLoading(false);
+      return;
+    }
+
+    // Only fetch real data if user is authenticated
     const fetchCategories = async () => {
       try {
+        // Filter categories by user_id to ensure data isolation
         const { data, error } = await supabase
           .from('categories')
-          .select('*');
+          .select('*')
+          .eq('user_id', user.id);
 
         if (error) {
           throw error;
@@ -64,9 +80,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchProducts = async () => {
       try {
+        // Filter products by user_id to ensure data isolation
         const { data, error } = await supabase
           .from('products')
-          .select('*');
+          .select('*')
+          .eq('user_id', user.id);
 
         if (error) {
           throw error;
@@ -98,9 +116,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchTransactions = async () => {
       try {
+        // Filter transactions by user_id to ensure data isolation
         const { data, error } = await supabase
           .from('stock_transactions')
-          .select('*');
+          .select('*')
+          .eq('user_id', user.id);
 
         if (error) {
           throw error;
@@ -126,9 +146,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchReports = async () => {
       try {
+        // Filter reports by user_id to ensure data isolation
         const { data, error } = await supabase
           .from('reports')
-          .select('*');
+          .select('*')
+          .eq('user_id', user.id);
 
         if (error) {
           throw error;
@@ -158,9 +180,14 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     fetchProducts();
     fetchTransactions();
     fetchReports();
-  }, []);
+  }, [user]);
 
   const addProduct = async (product: Omit<Product, "id" | "createdAt" | "updatedAt">) => {
+    if (!user) {
+      toast.error("You must be logged in to add products");
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('products')
@@ -174,7 +201,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           unit: product.unit,
           quantity_in_stock: product.quantityInStock,
           min_stock_level: product.minStockLevel,
-          image_url: product.imageUrl
+          image_url: product.imageUrl,
+          user_id: user.id // Add user_id to ensure data isolation
         }])
         .select()
         .single();
@@ -210,6 +238,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProduct = async (updatedProduct: Product) => {
+    if (!user) {
+      toast.error("You must be logged in to update products");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('products')
@@ -226,7 +259,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           image_url: updatedProduct.imageUrl,
           updated_at: new Date().toISOString()
         })
-        .eq('id', updatedProduct.id);
+        .eq('id', updatedProduct.id)
+        .eq('user_id', user.id); // Ensure we only update the current user's products
 
       if (error) {
         throw error;
@@ -247,11 +281,17 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteProduct = async (id: string) => {
+    if (!user) {
+      toast.error("You must be logged in to delete products");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('products')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Ensure we only delete the current user's products
 
       if (error) {
         throw error;
@@ -266,6 +306,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProductStock = async (id: string, quantity: number, transactionType: TransactionType, notes?: string) => {
+    if (!user) {
+      toast.error("You must be logged in to update stock");
+      return;
+    }
+
     try {
       // Get the current product
       const product = products.find(p => p.id === id);
@@ -283,7 +328,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           quantity_in_stock: quantity,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Ensure we only update the current user's products
 
       if (updateError) {
         throw updateError;
@@ -297,7 +343,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           quantity: quantityChange,
           transaction_type: transactionType,
           notes: notes,
-          transaction_date: new Date().toISOString()
+          transaction_date: new Date().toISOString(),
+          user_id: user.id // Add user_id to ensure data isolation
         }]);
 
       if (transactionError) {
@@ -431,6 +478,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addStockTransaction = async (transaction: Omit<StockTransaction, "id" | "createdAt">) => {
+    if (!user) {
+      toast.error("You must be logged in to add transactions");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('stock_transactions')
@@ -439,7 +491,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           quantity: transaction.quantity,
           transaction_type: transaction.transactionType,
           notes: transaction.notes,
-          transaction_date: transaction.transactionDate.toISOString()
+          transaction_date: transaction.transactionDate.toISOString(),
+          user_id: user.id // Add user_id to ensure data isolation
         }])
         .select()
         .single();
@@ -557,7 +610,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           title,
           description,
           report_type: reportType,
-          data: reportData
+          data: reportData,
+          user_id: user.id // Add user_id to ensure data isolation
         }])
         .select()
         .single();

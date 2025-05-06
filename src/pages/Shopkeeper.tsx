@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useInventory, InventoryProvider } from "@/contexts/InventoryContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import ProductGrid from "@/components/shopkeeper/ProductGrid";
 import ShopkeeperHeader from "@/components/shopkeeper/ShopkeeperHeader";
 import ShoppingCart from "@/components/shopkeeper/ShoppingCart";
@@ -11,6 +12,7 @@ const ShopkeeperContent = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { loading } = useInventory();
+  const { user } = useAuth();
 
   // Set page title
   useEffect(() => {
@@ -43,6 +45,12 @@ const ShopkeeperContent = () => {
         />
 
         <main className="container mx-auto px-4 py-6">
+          {!user && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-blue-800 text-sm">
+              <p className="font-medium">Demo Mode</p>
+              <p>You're viewing demo inventory data. <a href="/signup" className="text-blue-600 underline">Sign up</a> to manage your own inventory.</p>
+            </div>
+          )}
           <ProductGrid
             searchTerm={searchTerm}
             selectedCategory={selectedCategory}

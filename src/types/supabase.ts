@@ -19,6 +19,7 @@ export interface Database {
           business_hours: string | null
           created_at: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           id?: string
@@ -29,6 +30,7 @@ export interface Database {
           business_hours?: string | null
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Update: {
           id?: string
@@ -39,6 +41,7 @@ export interface Database {
           business_hours?: string | null
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       },
@@ -83,6 +86,7 @@ export interface Database {
           description: string | null
           created_at: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           id?: string
@@ -90,6 +94,7 @@ export interface Database {
           description?: string | null
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Update: {
           id?: string
@@ -97,6 +102,7 @@ export interface Database {
           description?: string | null
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -115,6 +121,7 @@ export interface Database {
           image_url: string | null
           created_at: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           id?: string
@@ -130,6 +137,7 @@ export interface Database {
           image_url?: string | null
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Update: {
           id?: string
@@ -145,6 +153,7 @@ export interface Database {
           image_url?: string | null
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -164,6 +173,7 @@ export interface Database {
           notes: string | null
           transaction_date: string
           created_at: string
+          user_id: string
         }
         Insert: {
           id?: string
@@ -173,6 +183,7 @@ export interface Database {
           notes?: string | null
           transaction_date?: string
           created_at?: string
+          user_id?: string
         }
         Update: {
           id?: string
@@ -182,6 +193,7 @@ export interface Database {
           notes?: string | null
           transaction_date?: string
           created_at?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -201,6 +213,7 @@ export interface Database {
           data: Json
           created_at: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           id?: string
@@ -210,6 +223,7 @@ export interface Database {
           data: Json
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Update: {
           id?: string
@@ -219,6 +233,7 @@ export interface Database {
           data?: Json
           created_at?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

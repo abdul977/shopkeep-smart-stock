@@ -38,10 +38,10 @@ const Signup = () => {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
-  // If user is already logged in, redirect to home
+  // If user is already logged in, redirect to dashboard
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 

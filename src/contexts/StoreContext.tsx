@@ -3,6 +3,7 @@ import { StoreSettings } from "@/types/inventory";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StoreContextType {
   storeSettings: StoreSettings | null;
@@ -14,15 +15,33 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStoreSettings = async () => {
       try {
+        // If user is not authenticated, use default store name
+        if (!user) {
+          setStoreSettings({
+            id: 'demo',
+            storeName: 'SmartStock',
+            location: 'Demo Location',
+            phoneNumber: '+234 123 456 7890',
+            businessHours: 'Mon-Sat: 9am - 6pm, Sun: Closed',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Fetch store settings for the current user
         const { data, error } = await supabase
           .from('store_settings')
           .select('*')
+          .eq('user_id', user.id)
           .limit(1)
           .single();
 
@@ -44,11 +63,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
           };
           setStoreSettings(formattedSettings);
         } else {
-          // If no settings exist, create default settings
+          // If no settings exist for this user, create default settings
           const { data: newData, error: insertError } = await supabase
             .from('store_settings')
             .insert([{
-              store_name: 'ShopKeep Smart Stock',
+              user_id: user.id,
+              store_name: 'SmartStock',
               location: '123 Main Street, City',
               phone_number: '+234 123 456 7890',
               business_hours: 'Mon-Sat: 9am - 6pm, Sun: Closed'
@@ -83,10 +103,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     fetchStoreSettings();
-  }, []);
+  }, [user]);
 
   const updateStoreSettings = async (settings: Partial<StoreSettings>) => {
-    if (!storeSettings) return;
+    if (!storeSettings || !user) return;
+
+    // Don't try to update demo settings
+    if (storeSettings.id === 'demo') {
+      toast.error("Cannot update demo settings. Please log in to update your store settings.");
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -99,7 +125,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
           business_hours: settings.businessHours,
           updated_at: new Date().toISOString()
         })
-        .eq('id', storeSettings.id);
+        .eq('id', storeSettings.id)
+        .eq('user_id', user.id); // Ensure we only update the current user's settings
 
       if (error) {
         throw error;
@@ -120,7 +147,13 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const uploadStoreLogo = async (file: File): Promise<string> => {
     // Create a unique toast ID
     const toastId = `upload-logo-${uuidv4()}`;
-    
+
+    // Check if user is authenticated
+    if (!user) {
+      toast.error("You must be logged in to upload a logo", { id: toastId });
+      throw new Error("Authentication required");
+    }
+
     try {
       // Validate file type
       const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -134,9 +167,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('File size exceeds 5MB limit. Please upload a smaller image.');
       }
 
-      // Create a unique file name
+      // Create a unique file name with user ID to ensure isolation
       const fileExt = file.name.split('.').pop();
-      const fileName = `store-logo-${uuidv4()}.${fileExt}`;
+      const fileName = `${user.id}/store-logo-${uuidv4()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       // Show upload toast with ID
