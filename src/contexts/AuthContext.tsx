@@ -33,31 +33,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (session?.user) {
         console.log("User is authenticated:", session.user.email);
-
-        // Check if user has a profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data, error }) => {
-            if (error || !data) {
-              console.warn("Profile not found, creating one...");
-              // Create profile if it doesn't exist
-              supabase
-                .from('profiles')
-                .insert([{ id: session.user.id }])
-                .then(({ error }) => {
-                  if (error) {
-                    console.error("Failed to create profile:", error);
-                  } else {
-                    console.log("Profile created successfully");
-                  }
-                });
-            } else {
-              console.log("Profile found:", data);
-            }
-          });
       } else {
         console.log("No authenticated user");
       }
@@ -70,31 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Check if user has a profile when they sign in
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            .then(({ data, error }) => {
-              if (error || !data) {
-                console.warn("Profile not found on sign in, creating one...");
-                // Create profile if it doesn't exist
-                supabase
-                  .from('profiles')
-                  .insert([{ id: session.user.id }])
-                  .then(({ error }) => {
-                    if (error) {
-                      console.error("Failed to create profile on sign in:", error);
-                    } else {
-                      console.log("Profile created successfully on sign in");
-                    }
-                  });
-              }
-            });
-        }
       }
     );
 
@@ -120,20 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Check if user was created
       if (data?.user) {
-        // Manually create a profile if needed
-        try {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([{ id: data.user.id }])
-            .single();
-
-          if (profileError) {
-            console.warn("Failed to create profile:", profileError);
-          }
-        } catch (profileErr) {
-          console.warn("Error creating profile:", profileErr);
-        }
-
+        // The database trigger will automatically create a profile
+        // No need to manually create it here
         toast.success("Account created successfully! You can now log in.");
       } else {
         toast.info("Please check your email to confirm your account.");
@@ -159,28 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data?.user) {
         toast.success("Signed in successfully!");
-
-        // Check if user has a profile, if not create one
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-
-          if (profileError || !profileData) {
-            // Create profile if it doesn't exist
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert([{ id: data.user.id }]);
-
-            if (insertError) {
-              console.warn("Failed to create profile on login:", insertError);
-            }
-          }
-        } catch (profileErr) {
-          console.warn("Error checking/creating profile:", profileErr);
-        }
+        // The profile should already exist from the database trigger
       }
     } catch (error: any) {
       console.error("Login error details:", error);

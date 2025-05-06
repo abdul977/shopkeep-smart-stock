@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
 import { Unit } from "@/types/inventory";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Image, Upload, X } from "lucide-react";
+import { Image, Upload, X, RefreshCw } from "lucide-react";
 
 interface AddProductDialogProps {
   open: boolean;
@@ -23,6 +23,29 @@ interface AddProductDialogProps {
 
 const unitOptions: Unit[] = ["piece", "packet", "kg", "liter", "box", "dozen"];
 
+// Function to generate a random SKU
+const generateRandomSKU = () => {
+  // Format: PRD-XXXX-YYYY where X is alphanumeric and Y is numeric
+  const alphanumeric = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const numeric = '0123456789';
+
+  let sku = 'PRD-';
+
+  // Add 4 random alphanumeric characters
+  for (let i = 0; i < 4; i++) {
+    sku += alphanumeric.charAt(Math.floor(Math.random() * alphanumeric.length));
+  }
+
+  sku += '-';
+
+  // Add 4 random numeric characters
+  for (let i = 0; i < 4; i++) {
+    sku += numeric.charAt(Math.floor(Math.random() * numeric.length));
+  }
+
+  return sku;
+};
+
 const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
   const { categories, addProduct, uploadProductImage } = useInventory();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +53,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    sku: "",
+    sku: generateRandomSKU(),
     barcode: "",
     categoryId: "",
     unitPrice: "",
@@ -39,6 +62,16 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
     minStockLevel: "",
     imageUrl: "",
   });
+
+  // Generate a new SKU when the dialog opens
+  useEffect(() => {
+    if (open) {
+      setFormData(prev => ({
+        ...prev,
+        sku: generateRandomSKU()
+      }));
+    }
+  }, [open]);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -100,7 +133,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.sku.trim()) newErrors.sku = "SKU is required";
+    // SKU is auto-generated, so no need to validate
     if (!formData.categoryId) newErrors.categoryId = "Category is required";
     if (!formData.unitPrice || isNaN(parseFloat(formData.unitPrice))) {
       newErrors.unitPrice = "Valid price is required";
@@ -137,7 +170,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
       setFormData({
         name: "",
         description: "",
-        sku: "",
+        sku: generateRandomSKU(), // Generate a new SKU for the next product
         barcode: "",
         categoryId: "",
         unitPrice: "",
@@ -178,14 +211,29 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
               </div>
 
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="sku">SKU*</Label>
-                <Input
-                  id="sku"
-                  name="sku"
-                  value={formData.sku}
-                  onChange={handleChange}
-                  className={`h-8 sm:h-10 text-sm ${errors.sku ? "border-red-500" : ""}`}
-                />
+                <Label htmlFor="sku">SKU* (Auto-generated)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="sku"
+                    name="sku"
+                    value={formData.sku}
+                    readOnly
+                    className={`h-8 sm:h-10 text-sm flex-1 bg-gray-50 ${errors.sku ? "border-red-500" : ""}`}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 sm:h-10 px-2"
+                    onClick={() => setFormData({ ...formData, sku: generateRandomSKU() })}
+                    title="Generate new SKU"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  SKU is automatically generated and can be refreshed if needed.
+                </p>
                 {errors.sku && (
                   <p className="text-xs text-red-500">{errors.sku}</p>
                 )}
