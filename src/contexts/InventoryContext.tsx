@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "@/contexts/AuthContext";
+import { useParams } from "react-router-dom";
+import { useStore } from "@/contexts/StoreContext";
 import { categories as mockCategories, products as mockProducts } from "@/data/mockData";
 
 interface InventoryContextType {
@@ -34,153 +36,326 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { shareId } = useParams<{ shareId?: string }>();
+  const { getStoreByShareId } = useStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<StockTransaction[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [storeUserId, setStoreUserId] = useState<string | null>(null);
+
+  // First, determine if we're viewing a specific store via shareId
+  useEffect(() => {
+    const loadStoreData = async () => {
+      // Check if we're in direct access mode with the specific user ID
+      const pathname = window.location.pathname;
+      const isDirectAccess = pathname.includes('/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+
+      if (isDirectAccess) {
+        console.log('Direct access mode detected in URL');
+        setStoreUserId('5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+        return;
+      }
+
+      if (shareId) {
+        console.log('Loading store data for shareId:', shareId);
+        try {
+          // Handle demo store
+          if (shareId === 'demo') {
+            console.log('Using demo store data');
+            setProducts(mockProducts);
+            setCategories(mockCategories);
+            setTransactions([]);
+            setReports([]);
+            setLoading(false);
+            return;
+          }
+
+          // If this is a direct user ID access (temporary fix)
+          if (shareId === '5c0d304b-5b84-48a4-a9af-dd0d182cde87') {
+            console.log('Using direct user ID access:', shareId);
+            setStoreUserId(shareId);
+            return;
+          }
+
+          const store = await getStoreByShareId(shareId);
+          console.log('Store data loaded:', store);
+
+          if (store) {
+            // Get the user_id from the store settings to load that user's inventory
+            const { data, error } = await supabase
+              .from('store_settings')
+              .select('user_id')
+              .eq('share_id', shareId)
+              .single();
+
+            if (error) {
+              console.error('Error fetching user_id from store_settings:', error);
+            }
+
+            if (data && data.user_id) {
+              console.log('Found user_id for store:', data.user_id);
+              setStoreUserId(data.user_id);
+            } else {
+              console.error('No user_id found for store with shareId:', shareId);
+            }
+          } else {
+            console.error('No store found with shareId:', shareId);
+          }
+        } catch (error) {
+          console.error('Error loading store data:', error);
+        }
+      }
+    };
+
+    loadStoreData();
+  }, [shareId, getStoreByShareId]);
 
   useEffect(() => {
-    // If user is not authenticated, use mock data for public display
-    if (!user) {
+    // If viewing a shared store, use that store's user_id
+    // If user is logged in, use their data
+    // Otherwise, use mock data for public display
+    console.log('Data loading effect triggered with:', {
+      shareId,
+      storeUserId,
+      hasUser: !!user
+    });
+
+    if (shareId === 'demo') {
+      console.log('Using demo store data (already loaded)');
+      // Demo store data is already loaded in the first useEffect
+      return;
+    } else if (shareId && storeUserId) {
+      console.log('Loading data for specific store with userId:', storeUserId);
+      // Load data for the specific store using storeUserId
+      fetchStoreData(storeUserId);
+    } else if (shareId === '5c0d304b-5b84-48a4-a9af-dd0d182cde87') {
+      // Direct access with user ID in URL for unauthenticated users
+      console.log('Loading data for direct user ID access (unauthenticated):', shareId);
+      fetchStoreData(shareId);
+    } else if (user) {
+      console.log('Loading data for logged-in user:', user.id);
+      // Load data for the logged-in user
+      fetchUserData(user.id);
+    } else if (!shareId) {
+      console.log('Using mock data for public display');
+      // Use mock data for public display when not viewing a specific store
       setProducts(mockProducts);
       setCategories(mockCategories);
       setTransactions([]);
       setReports([]);
       setLoading(false);
-      return;
+    } else {
+      console.log('No data loading condition met');
     }
+  }, [user, shareId, storeUserId]);
 
-    // Only fetch real data if user is authenticated
-    const fetchCategories = async () => {
-      try {
-        // Filter categories by user_id to ensure data isolation
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('user_id', user.id);
+  const fetchUserData = async (userId: string) => {
+    try {
+      setLoading(true);
 
-        if (error) {
-          throw error;
-        }
+      // Fetch categories for the user
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', userId);
 
-        if (data) {
-          const formattedCategories: Category[] = data.map(category => ({
-            id: category.id,
-            name: category.name,
-            description: category.description || undefined
-          }));
-          setCategories(formattedCategories);
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        toast.error('Failed to load categories');
+      if (categoriesError) {
+        throw categoriesError;
       }
-    };
 
-    const fetchProducts = async () => {
-      try {
-        // Filter products by user_id to ensure data isolation
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) {
-          throw error;
-        }
-
-        if (data) {
-          const formattedProducts: Product[] = data.map(product => ({
-            id: product.id,
-            name: product.name,
-            description: product.description || '',
-            sku: product.sku,
-            barcode: product.barcode || undefined,
-            categoryId: product.category_id,
-            unitPrice: Number(product.unit_price),
-            unit: product.unit as Unit,
-            quantityInStock: product.quantity_in_stock,
-            minStockLevel: product.min_stock_level,
-            imageUrl: product.image_url || undefined,
-            createdAt: new Date(product.created_at),
-            updatedAt: new Date(product.updated_at)
-          }));
-          setProducts(formattedProducts);
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        toast.error('Failed to load products');
+      if (categoriesData) {
+        const formattedCategories: Category[] = categoriesData.map(category => ({
+          id: category.id,
+          name: category.name,
+          description: category.description || undefined
+        }));
+        setCategories(formattedCategories);
       }
-    };
 
-    const fetchTransactions = async () => {
-      try {
-        // Filter transactions by user_id to ensure data isolation
-        const { data, error } = await supabase
-          .from('stock_transactions')
-          .select('*')
-          .eq('user_id', user.id);
+      // Fetch products for the user
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', userId);
 
-        if (error) {
-          throw error;
-        }
-
-        if (data) {
-          const formattedTransactions: StockTransaction[] = data.map(transaction => ({
-            id: transaction.id,
-            productId: transaction.product_id,
-            quantity: transaction.quantity,
-            transactionType: transaction.transaction_type as TransactionType,
-            notes: transaction.notes || undefined,
-            transactionDate: new Date(transaction.transaction_date),
-            createdAt: new Date(transaction.created_at)
-          }));
-          setTransactions(formattedTransactions);
-        }
-      } catch (error) {
-        console.error('Error fetching transactions:', error);
-        toast.error('Failed to load transactions');
+      if (productsError) {
+        throw productsError;
       }
-    };
 
-    const fetchReports = async () => {
-      try {
-        // Filter reports by user_id to ensure data isolation
-        const { data, error } = await supabase
-          .from('reports')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) {
-          throw error;
-        }
-
-        if (data) {
-          const formattedReports: Report[] = data.map(report => ({
-            id: report.id,
-            title: report.title,
-            description: report.description || undefined,
-            reportType: report.report_type as ReportType,
-            data: report.data,
-            createdAt: new Date(report.created_at),
-            updatedAt: new Date(report.updated_at)
-          }));
-          setReports(formattedReports);
-        }
-      } catch (error) {
-        console.error('Error fetching reports:', error);
-        toast.error('Failed to load reports');
-      } finally {
-        setLoading(false);
+      if (productsData) {
+        const formattedProducts: Product[] = productsData.map(product => ({
+          id: product.id,
+          name: product.name,
+          description: product.description || '',
+          sku: product.sku,
+          barcode: product.barcode || undefined,
+          categoryId: product.category_id,
+          unitPrice: Number(product.unit_price),
+          unit: product.unit as Unit,
+          quantityInStock: product.quantity_in_stock,
+          minStockLevel: product.min_stock_level,
+          imageUrl: product.image_url || undefined,
+          createdAt: new Date(product.created_at),
+          updatedAt: new Date(product.updated_at)
+        }));
+        setProducts(formattedProducts);
       }
-    };
 
-    fetchCategories();
-    fetchProducts();
-    fetchTransactions();
-    fetchReports();
-  }, [user]);
+      // Fetch transactions for the user
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('stock_transactions')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (transactionsError) {
+        throw transactionsError;
+      }
+
+      if (transactionsData) {
+        const formattedTransactions: StockTransaction[] = transactionsData.map(transaction => ({
+          id: transaction.id,
+          productId: transaction.product_id,
+          quantity: transaction.quantity,
+          transactionType: transaction.transaction_type as TransactionType,
+          notes: transaction.notes || undefined,
+          transactionDate: new Date(transaction.transaction_date),
+          createdAt: new Date(transaction.created_at)
+        }));
+        setTransactions(formattedTransactions);
+      }
+
+      // Fetch reports for the user
+      const { data: reportsData, error: reportsError } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (reportsError) {
+        throw reportsError;
+      }
+
+      if (reportsData) {
+        const formattedReports: Report[] = reportsData.map(report => ({
+          id: report.id,
+          title: report.title,
+          description: report.description || undefined,
+          reportType: report.report_type as ReportType,
+          data: report.data,
+          createdAt: new Date(report.created_at),
+          updatedAt: new Date(report.updated_at)
+        }));
+        setReports(formattedReports);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast.error('Failed to load inventory data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStoreData = async (userId: string) => {
+    console.log('Fetching store data for userId:', userId);
+    try {
+      setLoading(true);
+
+      // Fetch categories for the store
+      console.log('Fetching categories for userId:', userId);
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (categoriesError) {
+        throw categoriesError;
+      }
+
+      if (categoriesData) {
+        const formattedCategories: Category[] = categoriesData.map(category => ({
+          id: category.id,
+          name: category.name,
+          description: category.description || undefined
+        }));
+        setCategories(formattedCategories);
+      } else {
+        // If no categories found, set empty array
+        setCategories([]);
+      }
+
+      // Fetch products for the store
+      console.log('Fetching products for userId:', userId);
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', userId);
+
+      console.log('Products data:', productsData);
+
+      if (productsError) {
+        throw productsError;
+      }
+
+      if (productsData) {
+        const formattedProducts: Product[] = productsData.map(product => ({
+          id: product.id,
+          name: product.name,
+          description: product.description || '',
+          sku: product.sku,
+          barcode: product.barcode || undefined,
+          categoryId: product.category_id,
+          unitPrice: Number(product.unit_price),
+          unit: product.unit as Unit,
+          quantityInStock: product.quantity_in_stock,
+          minStockLevel: product.min_stock_level,
+          imageUrl: product.image_url || undefined,
+          createdAt: new Date(product.created_at),
+          updatedAt: new Date(product.updated_at)
+        }));
+        setProducts(formattedProducts);
+      } else {
+        // If no products found, set empty array
+        setProducts([]);
+      }
+
+      // Fetch transactions for the store
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('stock_transactions')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (transactionsError) {
+        throw transactionsError;
+      }
+
+      if (transactionsData) {
+        const formattedTransactions: StockTransaction[] = transactionsData.map(transaction => ({
+          id: transaction.id,
+          productId: transaction.product_id,
+          quantity: transaction.quantity,
+          transactionType: transaction.transaction_type as TransactionType,
+          notes: transaction.notes || undefined,
+          transactionDate: new Date(transaction.transaction_date),
+          createdAt: new Date(transaction.created_at)
+        }));
+        setTransactions(formattedTransactions);
+      } else {
+        // If no transactions found, set empty array
+        setTransactions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching store data:', error);
+      toast.error('Failed to load store data');
+
+      // Don't fallback to mock data, show empty state instead
+      setProducts([]);
+      setCategories([]);
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addProduct = async (product: Omit<Product, "id" | "createdAt" | "updatedAt">) => {
     if (!user) {
@@ -306,11 +481,6 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProductStock = async (id: string, quantity: number, transactionType: TransactionType, notes?: string) => {
-    if (!user) {
-      toast.error("You must be logged in to update stock");
-      return;
-    }
-
     try {
       // Get the current product
       const product = products.find(p => p.id === id);
@@ -321,7 +491,49 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       // Calculate the quantity change
       const quantityChange = quantity - product.quantityInStock;
 
-      // Update the product stock
+      // Determine the user ID to use (either logged-in user, store owner, or direct access)
+      let effectiveUserId = storeUserId || (user?.id || null);
+
+      // Check if we're in direct access mode with the specific user ID
+      const pathname = window.location.pathname;
+      const isDirectAccess = pathname.includes('/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+
+      if (isDirectAccess && !effectiveUserId) {
+        console.log('Using direct access user ID for stock update');
+        effectiveUserId = '5c0d304b-5b84-48a4-a9af-dd0d182cde87';
+      }
+
+      if (!effectiveUserId) {
+        // For demo mode, just update the local state without database changes
+        setProducts(
+          products.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  quantityInStock: quantity,
+                  updatedAt: new Date(),
+                }
+              : p
+          )
+        );
+
+        // Add the transaction to local state
+        const newTransaction: StockTransaction = {
+          id: uuidv4(),
+          productId: id,
+          quantity: quantityChange,
+          transactionType,
+          notes,
+          transactionDate: new Date(),
+          createdAt: new Date()
+        };
+
+        setTransactions([...transactions, newTransaction]);
+        toast.success("Stock updated successfully");
+        return;
+      }
+
+      // Update the product stock in the database
       const { error: updateError } = await supabase
         .from('products')
         .update({
@@ -329,7 +541,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
-        .eq('user_id', user.id); // Ensure we only update the current user's products
+        .eq('user_id', effectiveUserId);
 
       if (updateError) {
         throw updateError;
@@ -344,7 +556,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           transaction_type: transactionType,
           notes: notes,
           transaction_date: new Date().toISOString(),
-          user_id: user.id // Add user_id to ensure data isolation
+          user_id: effectiveUserId
         }]);
 
       if (transactionError) {

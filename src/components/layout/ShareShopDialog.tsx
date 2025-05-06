@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Copy, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { useStore } from "@/contexts/StoreContext";
 
 interface ShareShopDialogProps {
   open: boolean;
@@ -17,7 +18,9 @@ interface ShareShopDialogProps {
 }
 
 const ShareShopDialog = ({ open, onOpenChange }: ShareShopDialogProps) => {
-  const shopUrl = `${window.location.origin}/shop`;
+  const { storeSettings } = useStore();
+  const shareId = storeSettings?.shareId || 'demo';
+  const shopUrl = `${window.location.origin}/shop/${shareId}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shopUrl)}`;
   const qrRef = useRef<HTMLImageElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -34,23 +37,23 @@ const ShareShopDialog = ({ open, onOpenChange }: ShareShopDialogProps) => {
 
   const downloadQRCode = () => {
     if (!qrRef.current) return;
-    
+
     setIsDownloading(true);
-    
+
     try {
       const canvas = document.createElement("canvas");
       canvas.width = qrRef.current.width;
       canvas.height = qrRef.current.height;
-      
+
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.drawImage(qrRef.current, 0, 0);
-        
+
         const link = document.createElement("a");
         link.download = "shopkeep-qrcode.png";
         link.href = canvas.toDataURL("image/png");
         link.click();
-        
+
         toast.success("QR code downloaded");
       }
     } catch (error) {
@@ -64,8 +67,8 @@ const ShareShopDialog = ({ open, onOpenChange }: ShareShopDialogProps) => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "ShopKeep Smart Stock",
-          text: "Check out our shop!",
+          title: storeSettings?.storeName || "ShopKeep Smart Stock",
+          text: `Check out ${storeSettings?.storeName || "our"} shop!`,
           url: shopUrl
         });
         toast.success("Link shared successfully");
@@ -85,41 +88,41 @@ const ShareShopDialog = ({ open, onOpenChange }: ShareShopDialogProps) => {
         <DialogHeader>
           <DialogTitle>Share Shop Link</DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex flex-col items-center gap-4 py-4">
           <div className="bg-white p-2 border rounded-md shadow-sm">
-            <img 
+            <img
               ref={qrRef}
-              src={qrCodeUrl} 
-              alt="Shop QR Code" 
+              src={qrCodeUrl}
+              alt="Shop QR Code"
               className="w-48 h-48"
               crossOrigin="anonymous"
             />
           </div>
-          
+
           <div className="flex w-full items-center space-x-2">
             <Input
               value={shopUrl}
               readOnly
               className="flex-1"
             />
-            <Button 
-              type="button" 
-              size="icon" 
+            <Button
+              type="button"
+              size="icon"
               onClick={copyLink}
             >
               <Copy className="h-4 w-4" />
             </Button>
           </div>
-          
+
           <p className="text-sm text-gray-500 text-center">
             Share this link with customers to access your shop. They can scan the QR code or visit the URL directly.
           </p>
         </div>
-        
+
         <DialogFooter className="flex gap-2 sm:justify-center">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="flex-1"
             onClick={downloadQRCode}
             disabled={isDownloading}
@@ -127,7 +130,7 @@ const ShareShopDialog = ({ open, onOpenChange }: ShareShopDialogProps) => {
             <Download className="h-4 w-4 mr-2" />
             {isDownloading ? "Downloading..." : "Download QR"}
           </Button>
-          <Button 
+          <Button
             className="flex-1"
             onClick={shareLink}
           >

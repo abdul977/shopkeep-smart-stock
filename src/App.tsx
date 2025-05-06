@@ -43,6 +43,10 @@ const App = () => (
                 path="/shop"
                 element={<Shopkeeper />}
               />
+              <Route
+                path="/shop/:shareId"
+                element={<Shopkeeper />}
+              />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

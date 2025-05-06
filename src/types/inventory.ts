@@ -30,6 +30,7 @@ export type StoreSettings = {
   phoneNumber?: string;
   logoUrl?: string;
   businessHours?: string;
+  shareId?: string;
   createdAt: Date;
   updatedAt: Date;
 };

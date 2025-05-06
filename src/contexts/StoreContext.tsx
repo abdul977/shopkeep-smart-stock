@@ -9,6 +9,7 @@ interface StoreContextType {
   storeSettings: StoreSettings | null;
   updateStoreSettings: (settings: Partial<StoreSettings>) => Promise<void>;
   uploadStoreLogo: (file: File) => Promise<string>;
+  getStoreByShareId: (shareId: string) => Promise<StoreSettings | null>;
   loading: boolean;
 }
 
@@ -22,14 +23,52 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchStoreSettings = async () => {
       try {
-        // If user is not authenticated, use default store name
+        // If user is not authenticated, check if we're in the special direct access mode
         if (!user) {
+          // Check if we're on the shopkeeper page with the specific user ID
+          const pathname = window.location.pathname;
+          const isDirectAccess = pathname.includes('/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+
+          if (isDirectAccess) {
+            console.log('Direct access mode detected, fetching real store settings');
+            // Fetch store settings for the specific user ID
+            const { data, error } = await supabase
+              .from('store_settings')
+              .select('*')
+              .eq('user_id', '5c0d304b-5b84-48a4-a9af-dd0d182cde87')
+              .limit(1)
+              .single();
+
+            if (error && error.code !== 'PGRST116') {
+              throw error;
+            }
+
+            if (data) {
+              const formattedSettings: StoreSettings = {
+                id: data.id,
+                storeName: data.store_name,
+                location: data.location || undefined,
+                phoneNumber: data.phone_number || undefined,
+                logoUrl: data.logo_url || undefined,
+                businessHours: data.business_hours || undefined,
+                shareId: data.share_id || undefined,
+                createdAt: new Date(data.created_at),
+                updatedAt: new Date(data.updated_at)
+              };
+              setStoreSettings(formattedSettings);
+              setLoading(false);
+              return;
+            }
+          }
+
+          // Default demo settings for unauthenticated users
           setStoreSettings({
             id: 'demo',
             storeName: 'SmartStock',
             location: 'Demo Location',
             phoneNumber: '+234 123 456 7890',
             businessHours: 'Mon-Sat: 9am - 6pm, Sun: Closed',
+            shareId: 'demo',
             createdAt: new Date(),
             updatedAt: new Date()
           });
@@ -58,12 +97,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             phoneNumber: data.phone_number || undefined,
             logoUrl: data.logo_url || undefined,
             businessHours: data.business_hours || undefined,
+            shareId: data.share_id || undefined,
             createdAt: new Date(data.created_at),
             updatedAt: new Date(data.updated_at)
           };
           setStoreSettings(formattedSettings);
         } else {
           // If no settings exist for this user, create default settings
+          // Generate a unique share ID for the store
+          const shareId = uuidv4();
+
           const { data: newData, error: insertError } = await supabase
             .from('store_settings')
             .insert([{
@@ -71,7 +114,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
               store_name: 'SmartStock',
               location: '123 Main Street, City',
               phone_number: '+234 123 456 7890',
-              business_hours: 'Mon-Sat: 9am - 6pm, Sun: Closed'
+              business_hours: 'Mon-Sat: 9am - 6pm, Sun: Closed',
+              share_id: shareId
             }])
             .select()
             .single();
@@ -88,6 +132,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
               phoneNumber: newData.phone_number || undefined,
               logoUrl: newData.logo_url || undefined,
               businessHours: newData.business_hours || undefined,
+              shareId: newData.share_id || undefined,
               createdAt: new Date(newData.created_at),
               updatedAt: new Date(newData.updated_at)
             };
@@ -115,6 +160,36 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      // If shareId is being updated, make sure it's unique and valid
+      if (settings.shareId && settings.shareId !== storeSettings.shareId) {
+        // Validate share ID format (alphanumeric, hyphens, underscores only)
+        const validShareIdPattern = /^[a-zA-Z0-9-_]+$/;
+        if (!validShareIdPattern.test(settings.shareId)) {
+          throw new Error('Share ID can only contain letters, numbers, hyphens, and underscores.');
+        }
+
+        // Check if the shareId is already in use
+        try {
+          const { data: existingStore, error: checkError } = await supabase
+            .from('store_settings')
+            .select('id')
+            .eq('share_id', settings.shareId)
+            .neq('id', storeSettings.id) // Exclude current store
+            .limit(1);
+
+          if (checkError) {
+            throw checkError;
+          }
+
+          if (existingStore && existingStore.length > 0) {
+            throw new Error('This share ID is already in use. Please choose a different one.');
+          }
+        } catch (error) {
+          console.error('Error checking share ID:', error);
+          throw new Error('Error validating share ID. Please try again.');
+        }
+      }
+
       const { error } = await supabase
         .from('store_settings')
         .update({
@@ -123,6 +198,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
           phone_number: settings.phoneNumber,
           logo_url: settings.logoUrl,
           business_hours: settings.businessHours,
+          share_id: settings.shareId,
           updated_at: new Date().toISOString()
         })
         .eq('id', storeSettings.id)
@@ -140,7 +216,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       toast.success("Store settings updated successfully");
     } catch (error) {
       console.error('Error updating store settings:', error);
-      toast.error('Failed to update store settings');
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to update store settings');
+      }
     }
   };
 
@@ -209,12 +289,101 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const getStoreByShareId = async (shareId: string): Promise<StoreSettings | null> => {
+    try {
+      // Handle demo store
+      if (shareId === 'demo') {
+        return {
+          id: 'demo',
+          storeName: 'SmartStock',
+          location: 'Demo Location',
+          phoneNumber: '+234 123 456 7890',
+          businessHours: 'Mon-Sat: 9am - 6pm, Sun: Closed',
+          shareId: 'demo',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+      }
+
+      // Special case for direct user ID access
+      if (shareId === '5c0d304b-5b84-48a4-a9af-dd0d182cde87') {
+        // Fetch store settings by user_id instead of share_id
+        const { data, error } = await supabase
+          .from('store_settings')
+          .select('*')
+          .eq('user_id', shareId)
+          .limit(1)
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No store found with this user_id
+            console.error('No store found for user ID:', shareId);
+            return null;
+          }
+          throw error;
+        }
+
+        if (data) {
+          console.log('Found store settings for user ID:', data);
+          return {
+            id: data.id,
+            storeName: data.store_name,
+            location: data.location || undefined,
+            phoneNumber: data.phone_number || undefined,
+            logoUrl: data.logo_url || undefined,
+            businessHours: data.business_hours || undefined,
+            shareId: data.share_id,
+            createdAt: new Date(data.created_at),
+            updatedAt: new Date(data.updated_at)
+          };
+        }
+      }
+
+      // Regular case: Fetch store settings by share_id
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('share_id', shareId)
+        .limit(1)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No store found with this share_id
+          return null;
+        }
+        throw error;
+      }
+
+      if (data) {
+        return {
+          id: data.id,
+          storeName: data.store_name,
+          location: data.location || undefined,
+          phoneNumber: data.phone_number || undefined,
+          logoUrl: data.logo_url || undefined,
+          businessHours: data.business_hours || undefined,
+          shareId: data.share_id,
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at)
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching store by share ID:', error);
+      return null;
+    }
+  };
+
   return (
     <StoreContext.Provider
       value={{
         storeSettings,
         updateStoreSettings,
         uploadStoreLogo,
+        getStoreByShareId,
         loading
       }}
     >

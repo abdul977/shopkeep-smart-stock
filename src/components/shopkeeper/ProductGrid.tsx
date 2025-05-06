@@ -65,8 +65,20 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
       <h2 className="text-xl font-semibold mb-4">Products</h2>
 
       {filteredProducts.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          No products found. Try adjusting your search or category filter.
+        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex flex-col items-center justify-center">
+            <ShoppingCart className="h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+            {searchTerm || selectedCategory !== "all" ? (
+              <p className="text-gray-500 max-w-md">
+                Try adjusting your search or category filter.
+              </p>
+            ) : (
+              <p className="text-gray-500 max-w-md">
+                This store doesn't have any products yet. Please check back later.
+              </p>
+            )}
+          </div>
         </div>
       ) : (
         <div className={`grid grid-cols-1 ${

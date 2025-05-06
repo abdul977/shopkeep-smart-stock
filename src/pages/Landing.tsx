@@ -102,7 +102,7 @@ const LandingContent = () => {
                   </Link>
                 )}
                 <Link
-                  to="/shop"
+                  to="/shop/demo"
                   className="bg-transparent text-white border border-blue-500 px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-blue-900/30 transition-colors"
                 >
                   View Shop Demo
@@ -438,7 +438,7 @@ const LandingContent = () => {
                 </>
               )}
               <Link
-                to="/shop"
+                to="/shop/demo"
                 className="flex items-center text-blue-300 hover:text-blue-200 transition-colors"
               >
                 <ShoppingBag size={16} className="mr-2" /> Shop Demo

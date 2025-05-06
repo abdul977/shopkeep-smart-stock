@@ -25,7 +25,8 @@ const Settings = () => {
     location: "",
     phoneNumber: "",
     businessHours: "",
-    logoUrl: ""
+    logoUrl: "",
+    shareId: ""
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -40,7 +41,8 @@ const Settings = () => {
         location: storeSettings.location || "",
         phoneNumber: storeSettings.phoneNumber || "",
         businessHours: storeSettings.businessHours || "",
-        logoUrl: storeSettings.logoUrl || ""
+        logoUrl: storeSettings.logoUrl || "",
+        shareId: storeSettings.shareId || ""
       });
     }
   }, [storeSettings]);
@@ -56,10 +58,14 @@ const Settings = () => {
         location: storeFormData.location || undefined,
         phoneNumber: storeFormData.phoneNumber || undefined,
         businessHours: storeFormData.businessHours || undefined,
-        logoUrl: storeFormData.logoUrl || undefined
+        logoUrl: storeFormData.logoUrl || undefined,
+        shareId: storeFormData.shareId || undefined
       });
     } catch (error) {
       console.error("Error saving store settings:", error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
     }
   };
 
@@ -218,6 +224,28 @@ const Settings = () => {
                         placeholder="Mon-Sat: 9am - 6pm, Sun: Closed"
                         rows={2}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="shareId">Shop Share ID</Label>
+                      <div className="flex flex-col gap-1">
+                        <Input
+                          id="shareId"
+                          value={storeFormData.shareId}
+                          onChange={(e) => {
+                            // Only allow alphanumeric characters, hyphens, and underscores
+                            const value = e.target.value.replace(/[^a-zA-Z0-9-_]/g, '');
+                            setStoreFormData({ ...storeFormData, shareId: value });
+                          }}
+                          placeholder="my-store"
+                        />
+                        <p className="text-xs text-gray-500">
+                          This ID will be used in your shop's public URL: /shop/<span className="font-medium">{storeFormData.shareId || "your-id"}</span>
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Only letters, numbers, hyphens, and underscores are allowed.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

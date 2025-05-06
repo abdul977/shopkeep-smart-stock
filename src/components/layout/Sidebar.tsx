@@ -17,6 +17,7 @@ import {
   Share2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import ShareShopDialog from "./ShareShopDialog";
@@ -38,6 +39,7 @@ const Sidebar = ({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { signOut } = useAuth();
+  const { storeSettings } = useStore();
   const navigate = useNavigate();
 
   // Check if screen is mobile
@@ -71,7 +73,8 @@ const Sidebar = ({
   };
 
   const copyShopLink = () => {
-    const shopUrl = `${window.location.origin}/shop`;
+    const shareId = storeSettings?.shareId || 'demo';
+    const shopUrl = `${window.location.origin}/shop/${shareId}`;
     navigator.clipboard.writeText(shopUrl)
       .then(() => {
         toast.success("Shop link copied to clipboard!");
@@ -82,7 +85,8 @@ const Sidebar = ({
   };
 
   const openShopInNewTab = () => {
-    const shopUrl = `${window.location.origin}/shop`;
+    const shareId = storeSettings?.shareId || 'demo';
+    const shopUrl = `${window.location.origin}/shop/${shareId}`;
     window.open(shopUrl, '_blank');
   };
 
