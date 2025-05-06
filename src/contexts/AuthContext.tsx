@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Session, User, AuthError } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -54,6 +54,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
+
+      // We don't need to check if the user exists here
+      // Supabase will handle this for us and return an appropriate error
+
+      // Attempt to sign up the user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -66,19 +71,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Signup API error:", error);
+        throw error;
+      }
 
       // Check if user was created
       if (data?.user) {
+        // Wait a moment for the database trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         // The database trigger will automatically create a profile
-        // No need to manually create it here
         toast.success("Account created successfully! You can now log in.");
       } else {
         toast.info("Please check your email to confirm your account.");
       }
     } catch (error: any) {
       console.error("Signup error details:", error);
-      toast.error(error.message || "An error occurred during sign up");
+
+      // Provide more specific error messages
+      if (error.message.includes("already registered")) {
+        toast.error("This email is already registered. Please use a different email or try logging in.");
+      } else if (error.message.includes("Database error")) {
+        toast.error("There was a problem creating your account. Please try again later.");
+      } else {
+        toast.error(error.message || "An error occurred during sign up");
+      }
+
       throw error;
     } finally {
       setLoading(false);

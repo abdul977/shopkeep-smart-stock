@@ -80,25 +80,34 @@ const Signup = () => {
       // For debugging - log the email being used
       console.log("Attempting signup with email:", data.email);
 
-      await signUp(data.email, data.password);
-      setSignupSuccess(true);
+      // Add a small delay before signup to ensure any previous operations have completed
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Show a success message and redirect to login
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000); // Give time for the toast to be seen
-    } catch (error) {
-      console.error("Signup error details:", error);
+      try {
+        await signUp(data.email, data.password);
+        setSignupSuccess(true);
 
-      // Set a more specific error message
-      if (error.message.includes("already registered")) {
-        setSignupError("This email is already registered. Please use a different email or try logging in.");
-      } else if (error.message.includes("Database error")) {
-        setSignupError("There was a problem creating your account. Please try again later.");
-      } else {
-        setSignupError(`Signup failed: ${error.message}`);
+        // Show a success message and redirect to login
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000); // Give time for the toast to be seen
+      } catch (error) {
+        console.error("Signup error details:", error);
+
+        // Set a more specific error message
+        if (error.message.includes("already registered")) {
+          setSignupError("This email is already registered. Please use a different email or try logging in.");
+        } else if (error.message.includes("Database error")) {
+          setSignupError("There was a problem creating your account. Please try again later.");
+        } else {
+          setSignupError(`Signup failed: ${error.message}`);
+        }
+
+        throw error; // Re-throw to be caught by the outer catch
       }
-
+    } catch (error) {
+      console.error("Outer signup error handler:", error);
+    } finally {
       setIsLoading(false);
     }
   };
