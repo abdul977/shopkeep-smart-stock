@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BarChart, PieChart, Package, Archive, FilePlus, Download, Plus } from "lucide-react";
+import { BarChart, PieChart, Package, Archive, FilePlus, Download, Plus, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { exportReportToPdf, exportToPdf } from "@/lib/pdfUtils";
 import GenerateReportDialog from "./GenerateReportDialog";
 import { ReportType as DatabaseReportType } from "@/types/inventory";
+import { toast } from "sonner";
 
 type ReportViewType = "inventory" | "category" | "lowStock" | "saved";
 
@@ -22,6 +24,12 @@ const Reports = () => {
   const [selectedReport, setSelectedReport] = useState<ReportViewType>("inventory");
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedSavedReport, setSelectedSavedReport] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Refs for the tables
+  const inventoryTableRef = useRef<HTMLTableElement>(null);
+  const categoryTableRef = useRef<HTMLTableElement>(null);
+  const lowStockTableRef = useRef<HTMLTableElement>(null);
 
   const {
     products,
@@ -40,6 +48,131 @@ const Reports = () => {
   const viewReport = (type: ReportViewType) => {
     setSelectedReport(type);
     setSelectedSavedReport(null);
+  };
+
+  // Export inventory report to PDF
+  const exportInventoryReport = async () => {
+    if (!inventoryTableRef.current) {
+      toast.error("No table content to export");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+
+      const headerContent = `
+        <h1>Inventory Valuation Report</h1>
+        <p>Total Inventory Value: ${formatCurrency(totalValue)}</p>
+        <p>Generated on: ${new Date().toLocaleDateString()}</p>
+      `;
+
+      exportReportToPdf(
+        "Inventory Valuation Report",
+        headerContent,
+        inventoryTableRef.current.outerHTML,
+        `<p>Report generated from ShopKeep Smart Stock</p>`
+      );
+    } catch (error) {
+      console.error("Error exporting inventory report:", error);
+      toast.error("Failed to export inventory report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Export category report to PDF
+  const exportCategoryReport = async () => {
+    if (!categoryTableRef.current) {
+      toast.error("No table content to export");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+
+      const headerContent = `
+        <h1>Category Value Breakdown Report</h1>
+        <p>Total Inventory Value: ${formatCurrency(totalValue)}</p>
+        <p>Generated on: ${new Date().toLocaleDateString()}</p>
+      `;
+
+      exportReportToPdf(
+        "Category Value Breakdown Report",
+        headerContent,
+        categoryTableRef.current.outerHTML,
+        `<p>Report generated from ShopKeep Smart Stock</p>`
+      );
+    } catch (error) {
+      console.error("Error exporting category report:", error);
+      toast.error("Failed to export category report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Export low stock report to PDF
+  const exportLowStockReport = async () => {
+    if (!lowStockTableRef.current) {
+      toast.error("No table content to export");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+
+      const headerContent = `
+        <h1>Low Stock Items Report</h1>
+        <p>Total Items: ${lowStockProducts.length}</p>
+        <p>Generated on: ${new Date().toLocaleDateString()}</p>
+      `;
+
+      exportReportToPdf(
+        "Low Stock Items Report",
+        headerContent,
+        lowStockTableRef.current.outerHTML,
+        `<p>Report generated from ShopKeep Smart Stock</p>`
+      );
+    } catch (error) {
+      console.error("Error exporting low stock report:", error);
+      toast.error("Failed to export low stock report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Export saved report to PDF
+  const exportSavedReport = async (reportId: string) => {
+    const report = savedReports.find(r => r.id === reportId);
+    if (!report) {
+      toast.error("Report not found");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+
+      const headerContent = `
+        <h1>${report.title}</h1>
+        ${report.description ? `<p>${report.description}</p>` : ''}
+        <p>Generated on: ${report.createdAt.toLocaleDateString()}</p>
+      `;
+
+      const reportContent = `
+        <pre style="background-color: #f8f9fa; padding: 1rem; border-radius: 0.25rem; overflow: auto; font-family: monospace; font-size: 0.875rem;">
+          ${JSON.stringify(report.data, null, 2)}
+        </pre>
+      `;
+
+      exportToPdf(
+        `<div>${headerContent}${reportContent}</div>`,
+        report.title
+      );
+    } catch (error) {
+      console.error("Error exporting saved report:", error);
+      toast.error("Failed to export saved report");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -96,8 +229,18 @@ const Reports = () => {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Inventory Valuation</CardTitle>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" /> Export
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportInventoryReport}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {isExporting ? "Exporting..." : "Export PDF"}
               </Button>
             </div>
           </CardHeader>
@@ -106,7 +249,7 @@ const Reports = () => {
               Total Inventory Value: {formatCurrency(totalValue)}
             </div>
             <div className="overflow-x-auto">
-              <Table>
+              <Table ref={inventoryTableRef}>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product Name</TableHead>
@@ -144,15 +287,25 @@ const Reports = () => {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Category Value Breakdown</CardTitle>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" /> Export
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportCategoryReport}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {isExporting ? "Exporting..." : "Export PDF"}
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Table>
+                <Table ref={categoryTableRef}>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Category</TableHead>
@@ -239,14 +392,24 @@ const Reports = () => {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Low Stock Items</CardTitle>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" /> Export
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportLowStockReport}
+                disabled={isExporting || lowStockProducts.length === 0}
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {isExporting ? "Exporting..." : "Export PDF"}
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {lowStockProducts.length > 0 ? (
-              <Table>
+              <Table ref={lowStockTableRef}>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product Name</TableHead>
@@ -339,13 +502,27 @@ const Reports = () => {
                             {report.description || "No description"}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedSavedReport(report.id)}
-                            >
-                              View
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedSavedReport(report.id)}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => exportSavedReport(report.id)}
+                                disabled={isExporting}
+                              >
+                                {isExporting ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Download className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -362,8 +539,23 @@ const Reports = () => {
                       <CardHeader>
                         <div className="flex justify-between items-center">
                           <CardTitle>{report.title}</CardTitle>
-                          <div className="text-sm text-gray-500">
-                            Generated on {report.createdAt.toLocaleDateString()}
+                          <div className="flex items-center gap-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => exportSavedReport(report.id)}
+                              disabled={isExporting}
+                            >
+                              {isExporting ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Download className="h-4 w-4 mr-2" />
+                              )}
+                              {isExporting ? "Exporting..." : "Export PDF"}
+                            </Button>
+                            <div className="text-sm text-gray-500">
+                              Generated on {report.createdAt.toLocaleDateString()}
+                            </div>
                           </div>
                         </div>
                         {report.description && (

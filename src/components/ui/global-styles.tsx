@@ -148,3 +148,5 @@ export const OutlineLink = ({
     </a>
   );
 };
+
+export { GlowCircle };
