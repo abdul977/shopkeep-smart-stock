@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useCart } from "@/contexts/CartContext";
@@ -6,13 +7,12 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
   SheetDescription
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
-import { Trash2, Plus, Minus, Printer, X } from "lucide-react";
+import { Trash2, Plus, Minus, X } from "lucide-react";
 import Receipt from "./Receipt";
 import { GlowCircle } from "@/components/landing/LandingSvgs";
 
@@ -31,6 +31,11 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
     date: Date;
     receiptNumber: string;
   } | null>(null);
+
+  // Debug logging to verify items are being properly received
+  useEffect(() => {
+    console.log("Cart items in ShoppingCart:", items);
+  }, [items]);
 
   const handleCheckout = async () => {
     // Generate receipt data
@@ -133,7 +138,7 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
                             variant="outline"
                             size="icon"
                             className="h-8 w-8 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
                             disabled={item.quantity <= 1}
                             aria-label="Decrease quantity"
                           >
@@ -148,7 +153,7 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
                             variant="outline"
                             size="icon"
                             className="h-8 w-8 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product.id, Math.min(item.product.quantityInStock, item.quantity + 1))}
                             disabled={item.quantity >= item.product.quantityInStock}
                             aria-label="Increase quantity"
                           >

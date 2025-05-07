@@ -1,3 +1,4 @@
+
 import { useInventory } from "@/contexts/InventoryContext";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,16 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
   // Check if product is in cart
   const getCartItem = (productId: string) => {
     return items.find((item) => item.product.id === productId);
+  };
+
+  const handleAddToCart = (product) => {
+    console.log("Adding to cart:", product);
+    addItem(product);
+  };
+
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    console.log("Updating quantity:", productId, newQuantity);
+    updateQuantity(productId, newQuantity);
   };
 
   return (
@@ -101,7 +112,7 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
-                          onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
+                          onClick={() => handleUpdateQuantity(product.id, cartItem.quantity - 1)}
                           disabled={cartItem.quantity <= 1}
                         >
                           <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -113,7 +124,7 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
-                          onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
+                          onClick={() => handleUpdateQuantity(product.id, cartItem.quantity + 1)}
                           disabled={cartItem.quantity >= product.quantityInStock}
                         >
                           <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -122,11 +133,7 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
 
                       <Button
                         className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                        onClick={() => {
-                          // Instead of adding 1 more, just ensure the current quantity is set
-                          // This prevents incrementing the quantity when "Update Cart" is clicked
-                          updateQuantity(product.id, cartItem.quantity);
-                        }}
+                        onClick={() => handleAddToCart(product)}
                         disabled={product.quantityInStock <= 0 || cartItem.quantity >= product.quantityInStock}
                       >
                         Update Cart
@@ -135,7 +142,7 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                   ) : (
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm h-9 sm:h-10"
-                      onClick={() => addItem(product)}
+                      onClick={() => handleAddToCart(product)}
                       disabled={product.quantityInStock <= 0}
                     >
                       <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
