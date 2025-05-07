@@ -55,7 +55,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
     description: "",
     sku: generateRandomSKU(),
     barcode: "",
-    categoryId: "",
+    categoryId: "none",
     unitPrice: "",
     unit: "piece" as Unit,
     quantityInStock: "",
@@ -172,7 +172,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
         description: "",
         sku: generateRandomSKU(), // Generate a new SKU for the next product
         barcode: "",
-        categoryId: "",
+        categoryId: "none",
         unitPrice: "",
         unit: "piece" as Unit,
         quantityInStock: "",
@@ -263,7 +263,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
@@ -313,10 +313,10 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
                 <Label htmlFor="unit">Unit Type*</Label>
                 <Select
                   value={formData.unit}
-                  onValueChange={(value) => handleSelectChange("unit", value)}
+                  onValueChange={(value) => handleSelectChange("unit", value as Unit)}
                 >
                   <SelectTrigger className="h-8 sm:h-10 text-sm">
-                    <SelectValue />
+                    <SelectValue placeholder="Select unit type" />
                   </SelectTrigger>
                   <SelectContent>
                     {unitOptions.map((unit) => (

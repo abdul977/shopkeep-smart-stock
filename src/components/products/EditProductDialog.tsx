@@ -201,14 +201,14 @@ const EditProductDialog = ({ product, open, onOpenChange }: EditProductDialogPro
               <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="category">Category (optional)</Label>
                 <Select
-                  value={formData.categoryId || ""}
+                  value={formData.categoryId || "none"}
                   onValueChange={(value) => handleSelectChange("categoryId", value)}
                 >
                   <SelectTrigger className={`h-8 sm:h-10 text-sm ${errors.categoryId ? "border-red-500" : ""}`}>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
@@ -261,7 +261,7 @@ const EditProductDialog = ({ product, open, onOpenChange }: EditProductDialogPro
                   onValueChange={(value) => handleSelectChange("unit", value as Unit)}
                 >
                   <SelectTrigger className="h-8 sm:h-10 text-sm">
-                    <SelectValue />
+                    <SelectValue placeholder="Select unit type" />
                   </SelectTrigger>
                   <SelectContent>
                     {unitOptions.map((unit) => (
