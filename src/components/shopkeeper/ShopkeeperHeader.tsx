@@ -94,13 +94,13 @@ const ShopkeeperHeader = ({
 
             <Button
               variant="outline"
-              className="relative border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
+              className="relative border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100 px-4"
               onClick={onCartClick}
             >
               <ShoppingCart className="h-5 w-5 mr-2" />
               <span>Cart</span>
               {getTotalItems() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-medium">
                   {getTotalItems()}
                 </span>
               )}
@@ -132,12 +132,13 @@ const ShopkeeperHeader = ({
 
             <Button
               variant="outline"
-              className="relative border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
+              className="relative border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100 h-10 w-10 p-0"
               onClick={onCartClick}
+              aria-label="Open shopping cart"
             >
               <ShoppingCart className="h-5 w-5" />
               {getTotalItems() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-medium">
                   {getTotalItems()}
                 </span>
               )}
