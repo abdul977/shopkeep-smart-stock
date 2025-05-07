@@ -61,38 +61,40 @@ const MainContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Mobile Menu Button - Only visible on mobile */}
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Mobile Header - Only visible on mobile */}
       {isMobile && (
-        <button
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="fixed top-4 left-4 z-30 p-2 bg-white rounded-md shadow-md md:hidden"
-          aria-label="Open menu"
-        >
-          <Menu size={24} />
-        </button>
+        <div className="sticky top-0 bg-white shadow-sm z-30 p-4 flex items-center justify-between md:hidden">
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 rounded-md hover:bg-gray-100"
+            aria-label="Open menu"
+          >
+            <Menu size={22} className="text-gray-700" />
+          </button>
+
+          <h1 className="text-xl font-bold text-blue-600">SmartStock</h1>
+
+          <div className="w-10"></div> {/* Empty div for balanced spacing */}
+        </div>
       )}
 
-      {/* Sidebar - Responsive */}
-      <Sidebar
-        activePage={activePage}
-        setActivePage={setActivePage}
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-      />
+      {/* Main Layout */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Responsive */}
+        <Sidebar
+          activePage={activePage}
+          setActivePage={setActivePage}
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+        />
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto w-full">
-        {/* Content Header - Mobile */}
-        {isMobile && (
-          <div className="bg-white p-4 shadow-sm flex justify-center items-center">
-            <h1 className="text-xl font-bold text-inventory-primary">SmartStock</h1>
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto w-full">
+          {/* Page Content */}
+          <div className="p-4 md:p-6">
+            {renderPage()}
           </div>
-        )}
-
-        {/* Page Content */}
-        <div className="p-4 md:p-6">
-          {renderPage()}
         </div>
       </div>
     </div>

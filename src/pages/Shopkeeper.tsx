@@ -24,18 +24,49 @@ const ShopkeeperContent = () => {
   // Load store data based on shareId
   useEffect(() => {
     const loadStore = async () => {
-      // If no shareId is provided, use the default store
-      if (!shareId) {
-        setStoreLoaded(true);
-        return;
-      }
-
       try {
-        // Special case for direct user ID access
-        if (shareId === '5c0d304b-5b84-48a4-a9af-dd0d182cde87') {
-          console.log('Loading store for direct user ID access:', shareId);
+        // Check if we're in direct user ID access mode
+        const pathname = window.location.pathname;
+        const directUserId = '5c0d304b-5b84-48a4-a9af-dd0d182cde87';
+        const isDirectAccess = pathname.includes(`/shop/${directUserId}`);
+
+        // Case 1: Direct user ID access from URL path
+        if (isDirectAccess) {
+          console.log('Loading store for direct user ID access from URL path');
+          const store = await getStoreByShareId(directUserId);
+          if (!store) {
+            console.error('Store not found for direct user ID access');
+            setStoreNotFound(true);
+            return;
+          }
+          console.log('Store loaded successfully for direct access:', store);
+          setStoreLoaded(true);
+          return;
         }
 
+        // Case 2: Direct user ID access via parameter
+        if (shareId === directUserId) {
+          console.log('Loading store for direct user ID access via parameter:', shareId);
+          const store = await getStoreByShareId(directUserId);
+          if (!store) {
+            console.error('Store not found for direct user ID access via parameter');
+            setStoreNotFound(true);
+            return;
+          }
+          console.log('Store loaded successfully for direct access via parameter:', store);
+          setStoreLoaded(true);
+          return;
+        }
+
+        // Case 3: No shareId provided, use default store
+        if (!shareId) {
+          console.log('No shareId provided, using default store');
+          setStoreLoaded(true);
+          return;
+        }
+
+        // Case 4: Regular shareId access
+        console.log('Loading store for shareId:', shareId);
         const store = await getStoreByShareId(shareId);
         if (!store) {
           console.error('Store not found for shareId:', shareId);
@@ -110,7 +141,7 @@ const ShopkeeperContent = () => {
         />
 
         <main className="container mx-auto px-4 py-6">
-          {!user && !shareId && !window.location.pathname.includes('5c0d304b-5b84-48a4-a9af-dd0d182cde87') && (
+          {!user && (!shareId || shareId === 'demo') && !window.location.pathname.includes('5c0d304b-5b84-48a4-a9af-dd0d182cde87') && (
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-blue-800 text-sm">
               <p className="font-medium">Demo Mode</p>
               <p>You're viewing demo inventory data. <a href="/signup" className="text-blue-600 underline">Sign up</a> to manage your own inventory.</p>

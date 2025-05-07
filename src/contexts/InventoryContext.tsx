@@ -51,10 +51,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       // Check if we're in direct access mode with the specific user ID
       const pathname = window.location.pathname;
       const isDirectAccess = pathname.includes('/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+      const directUserId = '5c0d304b-5b84-48a4-a9af-dd0d182cde87';
 
       if (isDirectAccess) {
         console.log('Direct access mode detected in URL');
-        setStoreUserId('5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+        setStoreUserId(directUserId);
         return;
       }
 
@@ -73,7 +74,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           }
 
           // If this is a direct user ID access (temporary fix)
-          if (shareId === '5c0d304b-5b84-48a4-a9af-dd0d182cde87') {
+          if (shareId === directUserId) {
             console.log('Using direct user ID access:', shareId);
             setStoreUserId(shareId);
             return;
@@ -122,6 +123,17 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       hasUser: !!user
     });
 
+    // Check if we're in direct access mode with the specific user ID
+    const pathname = window.location.pathname;
+    const isDirectAccess = pathname.includes('/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+    const directUserId = '5c0d304b-5b84-48a4-a9af-dd0d182cde87';
+
+    if (isDirectAccess) {
+      console.log('Loading data for direct user ID access from URL path');
+      fetchStoreData(directUserId);
+      return;
+    }
+
     if (shareId === 'demo') {
       console.log('Using demo store data (already loaded)');
       // Demo store data is already loaded in the first useEffect
@@ -130,7 +142,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       console.log('Loading data for specific store with userId:', storeUserId);
       // Load data for the specific store using storeUserId
       fetchStoreData(storeUserId);
-    } else if (shareId === '5c0d304b-5b84-48a4-a9af-dd0d182cde87') {
+    } else if (shareId === directUserId) {
       // Direct access with user ID in URL for unauthenticated users
       console.log('Loading data for direct user ID access (unauthenticated):', shareId);
       fetchStoreData(shareId);

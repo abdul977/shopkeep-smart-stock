@@ -20,6 +20,105 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Define getStoreByShareId function first to avoid circular dependency
+  const getStoreByShareId = async (shareId: string): Promise<StoreSettings | null> => {
+    try {
+      console.log('Getting store by shareId:', shareId);
+
+      // Handle demo store
+      if (shareId === 'demo') {
+        console.log('Returning demo store settings');
+        return {
+          id: 'demo',
+          storeName: 'SmartStock',
+          location: 'Demo Location',
+          phoneNumber: '+234 123 456 7890',
+          businessHours: 'Mon-Sat: 9am - 6pm, Sun: Closed',
+          shareId: 'demo',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+      }
+
+      // Special case for direct user ID access
+      const directUserId = '5c0d304b-5b84-48a4-a9af-dd0d182cde87';
+      if (shareId === directUserId) {
+        console.log('Fetching store settings for direct user ID access:', directUserId);
+
+        // Fetch store settings by user_id instead of share_id
+        const { data, error } = await supabase
+          .from('store_settings')
+          .select('*')
+          .eq('user_id', directUserId)
+          .limit(1)
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No store found with this user_id
+            console.error('No store found for user ID:', directUserId);
+            return null;
+          }
+          throw error;
+        }
+
+        if (data) {
+          console.log('Found store settings for user ID:', data);
+          return {
+            id: data.id,
+            storeName: data.store_name,
+            location: data.location || undefined,
+            phoneNumber: data.phone_number || undefined,
+            logoUrl: data.logo_url || undefined,
+            businessHours: data.business_hours || undefined,
+            shareId: data.share_id,
+            createdAt: new Date(data.created_at),
+            updatedAt: new Date(data.updated_at)
+          };
+        }
+      }
+
+      // Regular case: Fetch store settings by share_id
+      console.log('Fetching store settings by share_id:', shareId);
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('share_id', shareId)
+        .limit(1)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No store found with this share_id
+          console.error('No store found with share_id:', shareId);
+          return null;
+        }
+        throw error;
+      }
+
+      if (data) {
+        console.log('Found store settings by share_id:', data);
+        return {
+          id: data.id,
+          storeName: data.store_name,
+          location: data.location || undefined,
+          phoneNumber: data.phone_number || undefined,
+          logoUrl: data.logo_url || undefined,
+          businessHours: data.business_hours || undefined,
+          shareId: data.share_id,
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at)
+        };
+      }
+
+      console.log('No store settings found for shareId:', shareId);
+      return null;
+    } catch (error) {
+      console.error('Error fetching store by share ID:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const fetchStoreSettings = async () => {
       try {
@@ -27,15 +126,28 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         if (!user) {
           // Check if we're on the shopkeeper page with the specific user ID
           const pathname = window.location.pathname;
-          const isDirectAccess = pathname.includes('/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87');
+          const directUserId = '5c0d304b-5b84-48a4-a9af-dd0d182cde87';
+          const isDirectAccess = pathname.includes(`/shop/${directUserId}`);
 
+          // Check if we're on a shop page with a share ID
+          const isShopPage = pathname.startsWith('/shop/');
+          const shareIdFromPath = isShopPage ? pathname.split('/shop/')[1] : null;
+
+          console.log('Path analysis:', {
+            pathname,
+            isDirectAccess,
+            isShopPage,
+            shareIdFromPath
+          });
+
+          // Case 1: Direct user ID access
           if (isDirectAccess) {
             console.log('Direct access mode detected, fetching real store settings');
             // Fetch store settings for the specific user ID
             const { data, error } = await supabase
               .from('store_settings')
               .select('*')
-              .eq('user_id', '5c0d304b-5b84-48a4-a9af-dd0d182cde87')
+              .eq('user_id', directUserId)
               .limit(1)
               .single();
 
@@ -44,6 +156,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (data) {
+              console.log('Found store settings for direct access:', data);
               const formattedSettings: StoreSettings = {
                 id: data.id,
                 storeName: data.store_name,
@@ -58,10 +171,30 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
               setStoreSettings(formattedSettings);
               setLoading(false);
               return;
+            } else {
+              console.error('No store settings found for direct user ID access');
+            }
+          }
+
+          // Case 2: Shop page with a share ID (not direct access)
+          if (isShopPage && shareIdFromPath && shareIdFromPath !== 'demo' && shareIdFromPath !== directUserId) {
+            console.log('Shop page with share ID detected:', shareIdFromPath);
+            try {
+              // Try to load store by share ID
+              const store = await getStoreByShareId(shareIdFromPath);
+              if (store) {
+                console.log('Found store settings for share ID:', store);
+                setStoreSettings(store);
+                setLoading(false);
+                return;
+              }
+            } catch (error) {
+              console.error('Error loading store by share ID:', error);
             }
           }
 
           // Default demo settings for unauthenticated users
+          console.log('Using default demo settings for unauthenticated user');
           setStoreSettings({
             id: 'demo',
             storeName: 'SmartStock',
@@ -286,94 +419,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       }
 
       throw error;
-    }
-  };
-
-  const getStoreByShareId = async (shareId: string): Promise<StoreSettings | null> => {
-    try {
-      // Handle demo store
-      if (shareId === 'demo') {
-        return {
-          id: 'demo',
-          storeName: 'SmartStock',
-          location: 'Demo Location',
-          phoneNumber: '+234 123 456 7890',
-          businessHours: 'Mon-Sat: 9am - 6pm, Sun: Closed',
-          shareId: 'demo',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-      }
-
-      // Special case for direct user ID access
-      if (shareId === '5c0d304b-5b84-48a4-a9af-dd0d182cde87') {
-        // Fetch store settings by user_id instead of share_id
-        const { data, error } = await supabase
-          .from('store_settings')
-          .select('*')
-          .eq('user_id', shareId)
-          .limit(1)
-          .single();
-
-        if (error) {
-          if (error.code === 'PGRST116') {
-            // No store found with this user_id
-            console.error('No store found for user ID:', shareId);
-            return null;
-          }
-          throw error;
-        }
-
-        if (data) {
-          console.log('Found store settings for user ID:', data);
-          return {
-            id: data.id,
-            storeName: data.store_name,
-            location: data.location || undefined,
-            phoneNumber: data.phone_number || undefined,
-            logoUrl: data.logo_url || undefined,
-            businessHours: data.business_hours || undefined,
-            shareId: data.share_id,
-            createdAt: new Date(data.created_at),
-            updatedAt: new Date(data.updated_at)
-          };
-        }
-      }
-
-      // Regular case: Fetch store settings by share_id
-      const { data, error } = await supabase
-        .from('store_settings')
-        .select('*')
-        .eq('share_id', shareId)
-        .limit(1)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No store found with this share_id
-          return null;
-        }
-        throw error;
-      }
-
-      if (data) {
-        return {
-          id: data.id,
-          storeName: data.store_name,
-          location: data.location || undefined,
-          phoneNumber: data.phone_number || undefined,
-          logoUrl: data.logo_url || undefined,
-          businessHours: data.business_hours || undefined,
-          shareId: data.share_id,
-          createdAt: new Date(data.created_at),
-          updatedAt: new Date(data.updated_at)
-        };
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error fetching store by share ID:', error);
-      return null;
     }
   };
 
