@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Package,
@@ -11,16 +11,14 @@ import {
   Home,
   LogOut,
   ShoppingCart,
-  Copy,
-  ExternalLink,
-  QrCode,
   Share2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/contexts/StoreContext";
-import { useNavigate, Link } from "react-router-dom";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import ShareShopDialog from "./ShareShopDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { GlowCircle } from "@/components/landing/LandingSvgs";
 
 interface SidebarProps {
   activePage: string;
@@ -37,26 +35,10 @@ const Sidebar = ({
 }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const { signOut } = useAuth();
   const { storeSettings } = useStore();
   const navigate = useNavigate();
-
-  // Check if screen is mobile
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener
-    window.addEventListener('resize', checkIfMobile);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
@@ -70,18 +52,6 @@ const Sidebar = ({
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
-  };
-
-  const copyShopLink = () => {
-    const shareId = storeSettings?.shareId || 'demo';
-    const shopUrl = `${window.location.origin}/shop/${shareId}`;
-    navigator.clipboard.writeText(shopUrl)
-      .then(() => {
-        toast.success("Shop link copied to clipboard!");
-      })
-      .catch(() => {
-        toast.error("Failed to copy link");
-      });
   };
 
   const openShopInNewTab = () => {
@@ -119,14 +89,18 @@ const Sidebar = ({
         />
 
         <div
-          className={`fixed top-0 left-0 h-screen w-[85%] max-w-[300px] bg-white border-r border-gray-200 z-50 transform transition-all duration-300 ease-in-out shadow-xl ${
+          className={`fixed top-0 left-0 h-screen w-[85%] max-w-[300px] bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border-r border-blue-900/30 z-50 transform transition-all duration-300 ease-in-out shadow-xl ${
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          } flex flex-col`}
+          } flex flex-col relative overflow-hidden`}
         >
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          {/* Background effects */}
+          <GlowCircle className="w-[200px] h-[200px] bg-blue-800/30 -top-20 -right-20" />
+          <GlowCircle className="w-[200px] h-[200px] bg-blue-800/30 bottom-20 -left-20" />
+
+          <div className="flex items-center justify-between p-4 border-b border-blue-900/30 relative z-10">
             <div className="flex items-center gap-2">
               {storeSettings?.logoUrl && (
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
+                <div className="h-8 w-8 bg-blue-900/40 rounded-full flex items-center justify-center overflow-hidden border border-blue-700/30">
                   <img
                     src={storeSettings.logoUrl}
                     alt={storeSettings.storeName}
@@ -137,43 +111,43 @@ const Sidebar = ({
                   />
                 </div>
               )}
-              <div className="text-xl font-bold text-inventory-primary">SmartStock</div>
+              <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">SmartStock</div>
             </div>
             <button
               onClick={handleMobileMenuToggle}
-              className="p-2 rounded-md hover:bg-gray-100 text-gray-500"
+              className="p-2 rounded-md hover:bg-blue-800/20 text-blue-300"
               aria-label="Close menu"
             >
               <X size={20} />
             </button>
           </div>
 
-          <div className="flex-grow py-2 overflow-y-auto">
+          <div className="flex-grow py-2 overflow-y-auto relative z-10">
             {/* Navigation Items */}
             <div className="px-3 mb-4">
-              <h3 className="text-xs uppercase text-gray-500 font-semibold px-3 mb-2 mt-2">Navigation</h3>
+              <h3 className="text-xs uppercase text-blue-300/70 font-semibold px-3 mb-2 mt-2">Navigation</h3>
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleNavItemClick(item.id)}
                   className={`w-full flex items-center p-3 mb-1 rounded-md transition-colors ${
                     activePage === item.id
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-blue-900/40 text-blue-200 font-medium"
+                      : "text-blue-100 hover:bg-blue-800/20"
                   }`}
                 >
-                  <item.icon size={20} className={activePage === item.id ? "text-blue-600" : "text-gray-500"} />
+                  <item.icon size={20} className={activePage === item.id ? "text-blue-300" : "text-blue-400/70"} />
                   <span className="ml-3">{item.label}</span>
                 </button>
               ))}
             </div>
 
             {/* Shop Actions */}
-            <div className="px-3 py-2 border-t border-gray-100 mt-2">
-              <h3 className="text-xs uppercase text-gray-500 font-semibold px-3 mb-2 mt-2">Shop Actions</h3>
+            <div className="px-3 py-2 border-t border-blue-900/30 mt-2">
+              <h3 className="text-xs uppercase text-blue-300/70 font-semibold px-3 mb-2 mt-2">Shop Actions</h3>
               <button
                 onClick={openShopInNewTab}
-                className="w-full flex items-center p-3 text-green-600 hover:bg-green-50 rounded-md mb-1"
+                className="w-full flex items-center p-3 text-green-300 hover:bg-blue-800/30 rounded-md mb-1"
               >
                 <ShoppingCart size={20} />
                 <span className="ml-3">Open Shop</span>
@@ -181,7 +155,7 @@ const Sidebar = ({
 
               <button
                 onClick={() => setShareDialogOpen(true)}
-                className="w-full flex items-center p-3 text-blue-600 hover:bg-blue-50 rounded-md"
+                className="w-full flex items-center p-3 text-blue-300 hover:bg-blue-800/30 rounded-md"
               >
                 <Share2 size={20} />
                 <span className="ml-3">Share Shop</span>
@@ -189,10 +163,10 @@ const Sidebar = ({
             </div>
           </div>
 
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-blue-900/30 relative z-10">
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center p-3 text-red-500 hover:bg-red-50 rounded-md"
+              className="w-full flex items-center p-3 text-red-300 hover:bg-blue-800/30 rounded-md"
             >
               <LogOut size={20} />
               <span className="ml-3">Sign Out</span>
@@ -211,25 +185,29 @@ const Sidebar = ({
     <div
       className={`${
         collapsed ? "w-16" : "w-64"
-      } bg-white border-r border-gray-200 h-screen transition-all duration-300 flex flex-col shadow-sm hidden md:flex`}
+      } bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border-r border-blue-900/30 h-screen transition-all duration-300 flex flex-col shadow-sm hidden md:flex relative overflow-hidden`}
     >
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      {/* Background effects */}
+      <GlowCircle className="w-[200px] h-[200px] bg-blue-800/30 -top-20 -right-20" />
+      <GlowCircle className="w-[200px] h-[200px] bg-blue-800/30 bottom-20 -left-20" />
+
+      <div className="flex items-center justify-between p-4 border-b border-blue-900/30 relative z-10">
         {!collapsed && (
-          <div className="text-xl font-bold text-inventory-primary">SmartStock</div>
+          <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">SmartStock</div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-md hover:bg-gray-100"
+          className="p-2 rounded-md hover:bg-blue-800/20 text-blue-300"
         >
           {collapsed ? <Menu size={20} /> : <X size={20} />}
         </button>
       </div>
 
-      <div className="flex-grow py-2 overflow-y-auto">
+      <div className="flex-grow py-2 overflow-y-auto relative z-10">
         {/* Navigation Items */}
         <div className={collapsed ? "px-1" : "px-3"}>
           {!collapsed && (
-            <h3 className="text-xs uppercase text-gray-500 font-semibold px-3 mb-2 mt-2">Navigation</h3>
+            <h3 className="text-xs uppercase text-blue-300/70 font-semibold px-3 mb-2 mt-2">Navigation</h3>
           )}
           {navItems.map((item) => (
             <button
@@ -239,13 +217,13 @@ const Sidebar = ({
                 collapsed ? "justify-center" : ""
               } ${
                 activePage === item.id
-                  ? "bg-blue-50 text-blue-600 font-medium rounded-md"
-                  : "text-gray-700 hover:bg-gray-100 rounded-md"
+                  ? "bg-blue-900/40 text-blue-200 font-medium rounded-md"
+                  : "text-blue-100 hover:bg-blue-800/20 rounded-md"
               }`}
             >
               <item.icon
                 size={20}
-                className={activePage === item.id ? "text-blue-600" : "text-gray-500"}
+                className={activePage === item.id ? "text-blue-300" : "text-blue-400/70"}
               />
               {!collapsed && <span className="ml-3">{item.label}</span>}
             </button>
@@ -253,16 +231,16 @@ const Sidebar = ({
         </div>
       </div>
 
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-blue-900/30 relative z-10">
         {/* Shop Actions */}
         <div className={collapsed ? "px-0" : "px-0 mb-4"}>
           {!collapsed && (
-            <h3 className="text-xs uppercase text-gray-500 font-semibold px-3 mb-2">Shop Actions</h3>
+            <h3 className="text-xs uppercase text-blue-300/70 font-semibold px-3 mb-2">Shop Actions</h3>
           )}
           <div className="flex flex-col space-y-2">
             <button
               onClick={openShopInNewTab}
-              className={`w-full flex items-center p-3 text-green-600 hover:bg-green-50 rounded-md ${
+              className={`w-full flex items-center p-3 text-green-300 hover:bg-blue-800/30 rounded-md ${
                 collapsed ? "justify-center" : ""
               }`}
             >
@@ -272,7 +250,7 @@ const Sidebar = ({
 
             <button
               onClick={() => setShareDialogOpen(true)}
-              className={`w-full flex items-center p-3 text-blue-600 hover:bg-blue-50 rounded-md ${
+              className={`w-full flex items-center p-3 text-blue-300 hover:bg-blue-800/30 rounded-md ${
                 collapsed ? "justify-center" : ""
               }`}
             >
@@ -283,10 +261,10 @@ const Sidebar = ({
         </div>
 
         {/* Sign Out */}
-        <div className={collapsed ? "mt-4" : "mt-2 pt-2 border-t border-gray-100"}>
+        <div className={collapsed ? "mt-4" : "mt-2 pt-2 border-t border-blue-900/30"}>
           <button
             onClick={handleSignOut}
-            className={`w-full flex items-center p-3 text-red-500 hover:bg-red-50 rounded-md ${
+            className={`w-full flex items-center p-3 text-red-300 hover:bg-blue-800/30 rounded-md ${
               collapsed ? "justify-center" : ""
             }`}
           >

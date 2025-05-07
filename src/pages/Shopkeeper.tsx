@@ -8,6 +8,8 @@ import ProductGrid from "@/components/shopkeeper/ProductGrid";
 import ShopkeeperHeader from "@/components/shopkeeper/ShopkeeperHeader";
 import ShoppingCart from "@/components/shopkeeper/ShoppingCart";
 import StoreInfo from "@/components/shopkeeper/StoreInfo";
+import { PageBackground } from "@/components/ui/global-styles";
+import { GlowCircle } from "@/components/landing/LandingSvgs";
 
 const ShopkeeperContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -102,36 +104,47 @@ const ShopkeeperContent = () => {
   // Show store not found message
   if (storeNotFound) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
-        <div className="text-center p-8 max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Store Not Found</h1>
-          <p className="text-gray-600 mb-6">
+      <PageBackground darkMode className="flex flex-col items-center justify-center h-screen">
+        <GlowCircle className="w-[300px] h-[300px] bg-blue-600/20 top-0 right-0" />
+        <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 bottom-20 left-10" />
+
+        <div className="text-center p-8 max-w-md relative z-10 bg-gradient-to-br from-blue-900/40 to-blue-800/20 rounded-xl border border-blue-700/30 backdrop-blur-sm">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Store Not Found</h1>
+          <p className="text-blue-200 mb-6">
             The store you're looking for doesn't exist or the link is invalid.
           </p>
           <button
             onClick={() => navigate('/shop/demo')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-md hover:from-blue-700 hover:to-blue-600 transition-colors shadow-lg shadow-blue-900/30"
           >
             Go to Demo Shop
           </button>
         </div>
-      </div>
+      </PageBackground>
     );
   }
 
   // Show loading state
   if (inventoryLoading || !storeLoaded) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <p className="ml-3 text-lg text-gray-600">Loading...</p>
-      </div>
+      <PageBackground darkMode className="flex items-center justify-center h-screen">
+        <GlowCircle className="w-[300px] h-[300px] bg-blue-600/20 top-0 right-0" />
+        <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 bottom-20 left-10" />
+
+        <div className="relative z-10 flex items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="ml-3 text-lg text-blue-300">Loading...</p>
+        </div>
+      </PageBackground>
     );
   }
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-gray-50">
+      <PageBackground darkMode className="min-h-screen">
+        <GlowCircle className="w-[400px] h-[400px] bg-blue-800/20 top-0 right-0 hidden md:block" />
+        <GlowCircle className="w-[300px] h-[300px] bg-blue-800/20 bottom-20 left-10 hidden md:block" />
+
         <ShopkeeperHeader
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -140,19 +153,19 @@ const ShopkeeperContent = () => {
           onCartClick={() => setIsCartOpen(true)}
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-4 py-6 relative z-10">
           {!user && (!shareId || shareId === 'demo') && !window.location.pathname.includes('5c0d304b-5b84-48a4-a9af-dd0d182cde87') && (
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-blue-800 text-sm">
+            <div className="bg-blue-900/30 border border-blue-700/30 rounded-md p-3 mb-4 text-blue-200 text-sm">
               <p className="font-medium">Demo Mode</p>
-              <p>You're viewing demo inventory data. <a href="/signup" className="text-blue-600 underline">Sign up</a> to manage your own inventory.</p>
+              <p>You're viewing demo inventory data. <a href="/signup" className="text-blue-300 hover:text-blue-200 underline">Sign up</a> to manage your own inventory.</p>
             </div>
           )}
 
           {storeSettings && (window.location.pathname.includes('5c0d304b-5b84-48a4-a9af-dd0d182cde87') || (shareId && shareId !== 'demo')) && (
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4 text-blue-800">
+            <div className="bg-blue-900/30 border border-blue-700/30 rounded-md p-4 mb-4 text-blue-200">
               <div className="flex items-center gap-3">
                 {storeSettings.logoUrl && (
-                  <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center overflow-hidden border border-blue-200">
+                  <div className="h-12 w-12 bg-blue-900/40 rounded-full flex items-center justify-center overflow-hidden border border-blue-700/30">
                     <img
                       src={storeSettings.logoUrl}
                       alt={storeSettings.storeName}
@@ -164,9 +177,9 @@ const ShopkeeperContent = () => {
                   </div>
                 )}
                 <div>
-                  <p className="font-medium text-lg">{storeSettings.storeName}</p>
-                  {storeSettings.location && <p className="text-sm">{storeSettings.location}</p>}
-                  {storeSettings.phoneNumber && <p className="text-sm">{storeSettings.phoneNumber}</p>}
+                  <p className="font-medium text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">{storeSettings.storeName}</p>
+                  {storeSettings.location && <p className="text-sm text-blue-300/70">{storeSettings.location}</p>}
+                  {storeSettings.phoneNumber && <p className="text-sm text-blue-300/70">{storeSettings.phoneNumber}</p>}
                 </div>
               </div>
             </div>
@@ -184,7 +197,7 @@ const ShopkeeperContent = () => {
         />
 
         <StoreInfo />
-      </div>
+      </PageBackground>
     </CartProvider>
   );
 };

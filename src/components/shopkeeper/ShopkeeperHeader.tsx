@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, ShoppingCart, ArrowLeft, Filter, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { GlowCircle } from "@/components/landing/LandingSvgs";
 
 interface ShopkeeperHeaderProps {
   searchTerm: string;
@@ -32,33 +34,20 @@ const ShopkeeperHeader = ({
   const { categories } = useInventory();
   const { getTotalItems } = useCart();
   const { storeSettings } = useStore();
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Check if screen is mobile
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener
-    window.addEventListener('resize', checkIfMobile);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
-
   return (
-    <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-4">
+    <header className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white shadow-md relative overflow-hidden">
+      <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 -top-20 -right-20" />
+      <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 bottom-20 -left-20" />
+
+      <div className="container mx-auto px-4 py-4 relative z-10">
         {/* Desktop Header */}
         <div className="hidden md:flex flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             {storeSettings?.logoUrl && (
-              <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
+              <div className="h-10 w-10 bg-blue-900/40 rounded-full flex items-center justify-center overflow-hidden border border-blue-700/30">
                 <img
                   src={storeSettings.logoUrl}
                   alt={storeSettings.storeName}
@@ -69,7 +58,7 @@ const ShopkeeperHeader = ({
                 />
               </div>
             )}
-            <h1 className="text-2xl font-bold text-blue-600">
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
               {storeSettings?.storeName || "SmartStock"}
             </h1>
           </div>
@@ -80,9 +69,9 @@ const ShopkeeperHeader = ({
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 border-gray-300"
+              className="pr-10 bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50"
             />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
           </div>
 
           <div className="flex items-center gap-4">
@@ -90,13 +79,13 @@ const ShopkeeperHeader = ({
               value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
-              <SelectTrigger className="w-[180px] border-gray-300">
+              <SelectTrigger className="w-[180px] bg-blue-900/30 border-blue-700/50 text-blue-200">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+              <SelectContent className="bg-[#1a1a2e] border-blue-700/50 text-blue-200">
+                <SelectItem value="all" className="focus:bg-blue-900/50 focus:text-blue-200">All Categories</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.id} className="focus:bg-blue-900/50 focus:text-blue-200">
                     {category.name}
                   </SelectItem>
                 ))}
@@ -105,7 +94,7 @@ const ShopkeeperHeader = ({
 
             <Button
               variant="outline"
-              className="relative border-gray-300 hover:bg-gray-50"
+              className="relative border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
               onClick={onCartClick}
             >
               <ShoppingCart className="h-5 w-5 mr-2" />
@@ -125,7 +114,7 @@ const ShopkeeperHeader = ({
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               {storeSettings?.logoUrl && (
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
+                <div className="h-8 w-8 bg-blue-900/40 rounded-full flex items-center justify-center overflow-hidden border border-blue-700/30">
                   <img
                     src={storeSettings.logoUrl}
                     alt={storeSettings.storeName}
@@ -136,14 +125,14 @@ const ShopkeeperHeader = ({
                   />
                 </div>
               )}
-              <h1 className="text-xl font-bold text-blue-600">
+              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
                 {storeSettings?.storeName || "SmartStock"}
               </h1>
             </div>
 
             <Button
               variant="outline"
-              className="relative"
+              className="relative border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
               onClick={onCartClick}
             >
               <ShoppingCart className="h-5 w-5" />
@@ -163,16 +152,16 @@ const ShopkeeperHeader = ({
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 w-full border-gray-300"
+                className="pr-10 w-full bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50"
               />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
             </div>
 
             <Button
               variant="outline"
               size="icon"
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex-shrink-0"
+              className="flex-shrink-0 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
               aria-label="Filter products"
             >
               <Filter className="h-5 w-5" />
@@ -181,14 +170,14 @@ const ShopkeeperHeader = ({
 
           {/* Filter Dropdown - Mobile */}
           {isFilterOpen && (
-            <div className="mt-4 p-4 bg-white rounded-md border border-gray-200 shadow-md animate-in slide-in-from-top-5 duration-300">
+            <div className="mt-4 p-4 bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] rounded-md border border-blue-700/30 shadow-md animate-in slide-in-from-top-5 duration-300">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-medium text-gray-800">Filter by Category</h3>
+                <h3 className="font-medium text-blue-200">Filter by Category</h3>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsFilterOpen(false)}
-                  className="h-7 w-7 rounded-full hover:bg-gray-100"
+                  className="h-7 w-7 rounded-full hover:bg-blue-800/30 text-blue-300"
                   aria-label="Close filter"
                 >
                   <X className="h-4 w-4" />
@@ -198,7 +187,11 @@ const ShopkeeperHeader = ({
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <Button
                   variant={selectedCategory === "all" ? "default" : "outline"}
-                  className={`w-full justify-start ${selectedCategory === "all" ? "bg-blue-600 hover:bg-blue-700" : "border-gray-300 hover:bg-gray-50"}`}
+                  className={`w-full justify-start ${
+                    selectedCategory === "all"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
+                  }`}
                   onClick={() => {
                     setSelectedCategory("all");
                     setIsFilterOpen(false);
@@ -211,7 +204,11 @@ const ShopkeeperHeader = ({
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "outline"}
-                    className={`w-full justify-start ${selectedCategory === category.id ? "bg-blue-600 hover:bg-blue-700" : "border-gray-300 hover:bg-gray-50"}`}
+                    className={`w-full justify-start ${
+                      selectedCategory === category.id
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
+                    }`}
                     onClick={() => {
                       setSelectedCategory(category.id);
                       setIsFilterOpen(false);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { InventoryProvider, useInventory } from "@/contexts/InventoryContext";
 import Sidebar from "@/components/layout/Sidebar";
 import Dashboard from "@/components/dashboard/Dashboard";
@@ -9,35 +9,21 @@ import Categories from "@/components/categories/Categories";
 import Reports from "@/components/reports/Reports";
 import Settings from "@/components/settings/Settings";
 import { Menu } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { PageBackground, GlowCircle } from "@/components/ui/global-styles";
 
 const MainContent = () => {
   const [activePage, setActivePage] = useState("dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const { loading } = useInventory();
-
-  // Check if screen is mobile
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener
-    window.addEventListener('resize', checkIfMobile);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
 
   const renderPage = () => {
     if (loading) {
       return (
         <div className="flex items-center justify-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-inventory-primary"></div>
-          <p className="ml-3 text-lg text-gray-600">Loading inventory data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="ml-3 text-lg text-blue-300">Loading inventory data...</p>
         </div>
       );
     }
@@ -61,26 +47,30 @@ const MainContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <PageBackground darkMode className="min-h-screen flex flex-col">
       {/* Mobile Header - Only visible on mobile */}
       {isMobile && (
-        <div className="sticky top-0 bg-white shadow-sm z-30 p-4 flex items-center justify-between md:hidden">
+        <div className="sticky top-0 bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] shadow-md z-30 p-4 flex items-center justify-between md:hidden border-b border-blue-900/30">
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 rounded-md hover:bg-gray-100"
+            className="p-2 rounded-md hover:bg-blue-800/20 text-blue-300"
             aria-label="Open menu"
           >
-            <Menu size={22} className="text-gray-700" />
+            <Menu size={22} />
           </button>
 
-          <h1 className="text-xl font-bold text-blue-600">SmartStock</h1>
+          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">SmartStock</h1>
 
           <div className="w-10"></div> {/* Empty div for balanced spacing */}
         </div>
       )}
 
       {/* Main Layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Background effects */}
+        <GlowCircle className="w-[400px] h-[400px] bg-blue-800/20 top-0 right-0 hidden md:block" />
+        <GlowCircle className="w-[300px] h-[300px] bg-blue-800/20 bottom-20 left-10 hidden md:block" />
+
         {/* Sidebar - Responsive */}
         <Sidebar
           activePage={activePage}
@@ -90,14 +80,14 @@ const MainContent = () => {
         />
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto w-full">
+        <div className="flex-1 overflow-auto w-full relative z-10">
           {/* Page Content */}
           <div className="p-4 md:p-6">
             {renderPage()}
           </div>
         </div>
       </div>
-    </div>
+    </PageBackground>
   );
 };
 

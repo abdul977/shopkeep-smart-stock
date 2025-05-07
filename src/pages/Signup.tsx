@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { PageBackground, GlowCircle, GradientButton } from "@/components/ui/global-styles";
 
 const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -113,52 +114,55 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 py-8">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1 px-4 sm:px-6 pt-6">
-          <CardTitle className="text-xl sm:text-2xl font-bold text-center">Create an account</CardTitle>
-          <CardDescription className="text-center text-sm sm:text-base">
-            Enter your details to create your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-4 sm:px-6">
+    <PageBackground darkMode className="flex items-center justify-center min-h-screen px-4 py-8">
+      {/* Background effects */}
+      <GlowCircle className="w-[300px] h-[300px] bg-blue-600/20 top-0 right-0" />
+      <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 bottom-20 left-10" />
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-gradient-to-br from-blue-900/40 to-blue-800/20 p-6 rounded-xl border border-blue-700/30 backdrop-blur-sm shadow-xl">
+          <div className="space-y-1 mb-6 text-center">
+            <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">Create an account</h1>
+            <p className="text-center text-sm sm:text-base text-blue-300/70">
+              Enter your details to create your account
+            </p>
+          </div>
+
           {signupError && (
-            <Alert className="mb-4 bg-red-50 text-red-800 border-red-200 text-xs sm:text-sm">
-              <AlertDescription>{signupError}</AlertDescription>
-            </Alert>
+            <div className="mb-4 bg-red-900/30 text-red-300 border border-red-700/30 rounded-md p-3 text-xs sm:text-sm">
+              {signupError}
+            </div>
           )}
 
           {signupSuccess && (
-            <Alert className="mb-4 bg-green-50 text-green-800 border-green-200 text-xs sm:text-sm">
-              <AlertDescription>
-                Account created successfully! Redirecting to login page...
-              </AlertDescription>
-            </Alert>
+            <div className="mb-4 bg-green-900/30 text-green-300 border border-green-700/30 rounded-md p-3 text-xs sm:text-sm">
+              Account created successfully! Redirecting to login page...
+            </div>
           )}
 
           {debugInfo && (
-            <Alert className="mb-4 bg-yellow-50 text-yellow-800 border-yellow-200 text-xs sm:text-sm">
-              <AlertDescription>Debug: {debugInfo}</AlertDescription>
-            </Alert>
+            <div className="mb-4 bg-yellow-900/30 text-yellow-300 border border-yellow-700/30 rounded-md p-3 text-xs sm:text-sm">
+              Debug: {debugInfo}
+            </div>
           )}
 
           {!signupSuccess && (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm sm:text-base">Email</FormLabel>
+                      <FormLabel className="text-sm sm:text-base text-blue-200">Email</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="email@example.com"
-                          className="text-sm sm:text-base h-9 sm:h-10"
+                          className="text-sm sm:text-base h-9 sm:h-10 bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50"
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage className="text-xs sm:text-sm" />
+                      <FormMessage className="text-xs sm:text-sm text-red-300" />
                     </FormItem>
                   )}
                 />
@@ -167,16 +171,16 @@ const Signup = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm sm:text-base">Password</FormLabel>
+                      <FormLabel className="text-sm sm:text-base text-blue-200">Password</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
                           placeholder="••••••••"
-                          className="text-sm sm:text-base h-9 sm:h-10"
+                          className="text-sm sm:text-base h-9 sm:h-10 bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50"
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage className="text-xs sm:text-sm" />
+                      <FormMessage className="text-xs sm:text-sm text-red-300" />
                     </FormItem>
                   )}
                 />
@@ -185,22 +189,22 @@ const Signup = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm sm:text-base">Confirm Password</FormLabel>
+                      <FormLabel className="text-sm sm:text-base text-blue-200">Confirm Password</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
                           placeholder="••••••••"
-                          className="text-sm sm:text-base h-9 sm:h-10"
+                          className="text-sm sm:text-base h-9 sm:h-10 bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50"
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage className="text-xs sm:text-sm" />
+                      <FormMessage className="text-xs sm:text-sm text-red-300" />
                     </FormItem>
                   )}
                 />
                 <Button
                   type="submit"
-                  className="w-full h-9 sm:h-10 text-sm sm:text-base mt-2"
+                  className="w-full h-9 sm:h-10 text-sm sm:text-base mt-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -213,23 +217,24 @@ const Signup = () => {
                   )}
                 </Button>
 
-                <div className="mt-2 text-xs sm:text-sm text-center">
-                  <p>Try creating: <strong>test@example.com / password123</strong></p>
+                <div className="mt-4 text-xs sm:text-sm text-center">
+                  <p className="text-blue-200">Try creating: <strong>test@example.com / password123</strong></p>
                 </div>
               </form>
             </Form>
           )}
-        </CardContent>
-        <CardFooter className="flex justify-center px-4 sm:px-6 pb-6">
-          <div className="text-xs sm:text-sm text-center text-gray-500">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline">
-              Login
-            </Link>
+
+          <div className="mt-6 flex justify-center">
+            <div className="text-xs sm:text-sm text-blue-300/70">
+              Already have an account?{" "}
+              <Link to="/login" className="text-blue-300 hover:text-blue-200 hover:underline">
+                Login
+              </Link>
+            </div>
           </div>
-        </CardFooter>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </PageBackground>
   );
 };
 
