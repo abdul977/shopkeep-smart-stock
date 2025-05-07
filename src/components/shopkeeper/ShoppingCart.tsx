@@ -6,7 +6,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetFooter
+  SheetFooter,
+  SheetDescription
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -74,6 +75,9 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
 
           <SheetHeader className="mb-4 relative z-10">
             <SheetTitle className="text-center sm:text-left bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">Shopping Cart</SheetTitle>
+            <SheetDescription className="text-center sm:text-left text-blue-300/70">
+              View and manage your selected items
+            </SheetDescription>
           </SheetHeader>
 
           {items.length === 0 ? (

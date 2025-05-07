@@ -6,7 +6,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
@@ -182,6 +183,9 @@ const Receipt = ({ data, onClose }: ReceiptProps) => {
               <X className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </DialogTitle>
+          <DialogDescription className="text-blue-300/70 text-center sm:text-left">
+            Transaction details for your purchase
+          </DialogDescription>
         </DialogHeader>
 
         <div ref={receiptRef} className="p-3 sm:p-4 bg-white border rounded-md">
