@@ -97,7 +97,7 @@ const EditProductDialog = ({ product, open, onOpenChange }: EditProductDialogPro
 
     if (!formData.name.trim()) newErrors.name = "Name is required";
     // SKU is read-only, so no need to validate
-    if (!formData.categoryId) newErrors.categoryId = "Category is required";
+    // Category is optional, so no validation needed
     if (!formData.unitPrice || isNaN(parseFloat(formData.unitPrice))) {
       newErrors.unitPrice = "Valid price is required";
     }
@@ -199,15 +199,16 @@ const EditProductDialog = ({ product, open, onOpenChange }: EditProductDialogPro
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="category">Category*</Label>
+                <Label htmlFor="category">Category (optional)</Label>
                 <Select
-                  value={formData.categoryId}
+                  value={formData.categoryId || ""}
                   onValueChange={(value) => handleSelectChange("categoryId", value)}
                 >
                   <SelectTrigger className={`h-8 sm:h-10 text-sm ${errors.categoryId ? "border-red-500" : ""}`}>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">None</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}

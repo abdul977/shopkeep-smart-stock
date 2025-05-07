@@ -134,7 +134,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
 
     if (!formData.name.trim()) newErrors.name = "Name is required";
     // SKU is auto-generated, so no need to validate
-    if (!formData.categoryId) newErrors.categoryId = "Category is required";
+    // Category is optional, so no validation needed
     if (!formData.unitPrice || isNaN(parseFloat(formData.unitPrice))) {
       newErrors.unitPrice = "Valid price is required";
     }
@@ -254,7 +254,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="category">Category*</Label>
+                <Label htmlFor="category">Category (optional)</Label>
                 <Select
                   value={formData.categoryId}
                   onValueChange={(value) => handleSelectChange("categoryId", value)}
@@ -263,6 +263,7 @@ const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">None</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}

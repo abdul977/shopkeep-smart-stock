@@ -17,6 +17,9 @@ interface InventoryContextType {
   addProduct: (product: Omit<Product, "id" | "createdAt" | "updatedAt">) => Promise<void>;
   updateProduct: (product: Product) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  addCategory: (category: Omit<Category, "id">) => Promise<void>;
+  updateCategory: (category: Category) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   updateProductStock: (id: string, quantity: number, transactionType: TransactionType, notes?: string) => Promise<void>;
   uploadProductImage: (file: File) => Promise<string>;
   getCategoryById: (id: string) => Category | undefined;
@@ -638,6 +641,111 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const addCategory = async (category: Omit<Category, "id">) => {
+    if (!user) {
+      toast.error("You must be logged in to add categories");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert([{
+          name: category.name,
+          description: category.description,
+          user_id: user.id // Add user_id to ensure data isolation
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        const newCategory: Category = {
+          id: data.id,
+          name: data.name,
+          description: data.description || undefined
+        };
+
+        setCategories([...categories, newCategory]);
+        toast.success("Category added successfully");
+      }
+    } catch (error) {
+      console.error('Error adding category:', error);
+      toast.error('Failed to add category');
+    }
+  };
+
+  const updateCategory = async (updatedCategory: Category) => {
+    if (!user) {
+      toast.error("You must be logged in to update categories");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({
+          name: updatedCategory.name,
+          description: updatedCategory.description,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', updatedCategory.id)
+        .eq('user_id', user.id); // Ensure we only update the current user's categories
+
+      if (error) {
+        throw error;
+      }
+
+      setCategories(
+        categories.map((category) =>
+          category.id === updatedCategory.id
+            ? updatedCategory
+            : category
+        )
+      );
+      toast.success("Category updated successfully");
+    } catch (error) {
+      console.error('Error updating category:', error);
+      toast.error('Failed to update category');
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    if (!user) {
+      toast.error("You must be logged in to delete categories");
+      return;
+    }
+
+    try {
+      // Check if there are products using this category
+      const productsUsingCategory = products.filter(product => product.categoryId === id);
+
+      if (productsUsingCategory.length > 0) {
+        toast.error(`Cannot delete category: ${productsUsingCategory.length} products are using it`);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id); // Ensure we only delete the current user's categories
+
+      if (error) {
+        throw error;
+      }
+
+      setCategories(categories.filter((category) => category.id !== id));
+      toast.success("Category deleted successfully");
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
+    }
+  };
+
   const uploadProductImage = async (file: File): Promise<string> => {
     // Create a unique toast ID
     const toastId = `upload-${uuidv4()}`;
@@ -878,6 +986,9 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         addProduct,
         updateProduct,
         deleteProduct,
+        addCategory,
+        updateCategory,
+        deleteCategory,
         updateProductStock,
         uploadProductImage,
         getCategoryById,

@@ -13,7 +13,7 @@ export type Product = {
   description: string;
   sku: string;
   barcode?: string;
-  categoryId: string;
+  categoryId?: string;
   unitPrice: number;
   unit: Unit;
   quantityInStock: number;
