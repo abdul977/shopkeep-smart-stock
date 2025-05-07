@@ -19,16 +19,16 @@ export const PageBackground = ({
   return (
     <div className={`relative overflow-hidden ${darkMode ? "bg-[#0f0a1e] text-white" : "bg-white text-gray-900"} ${className}`}>
       {darkMode && <HeroBackground />}
-      
+
       {withGlow && darkMode && (
         <>
           <GlowCircle className="w-[300px] h-[300px] bg-blue-600 top-0 right-0" />
           <GlowCircle className="w-[200px] h-[200px] bg-blue-800 bottom-20 left-10" />
         </>
       )}
-      
+
       {withWave && <WaveDivider />}
-      
+
       <div className="relative z-10">{children}</div>
     </div>
   );
@@ -41,7 +41,7 @@ interface CardContainerProps {
 
 export const CardContainer = ({ children, className = "" }: CardContainerProps) => {
   return (
-    <div className={`bg-gradient-to-br from-blue-900/40 to-blue-800/20 p-6 rounded-xl border border-blue-700/30 backdrop-blur-sm ${className}`}>
+    <div className={`bg-gradient-to-br from-blue-900/40 to-blue-800/20 p-2 sm:p-6 rounded-md sm:rounded-xl border border-blue-700/30 backdrop-blur-sm overflow-hidden ${className}`}>
       {children}
     </div>
   );

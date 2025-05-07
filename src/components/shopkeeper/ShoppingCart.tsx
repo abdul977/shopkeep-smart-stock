@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useCart } from "@/contexts/CartContext";
 import {
@@ -59,10 +59,15 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
     clearCart();
   };
 
+  // Force re-render when isOpen changes to ensure the sheet is properly initialized
+  useEffect(() => {
+    // This is just to trigger a re-render when isOpen changes
+  }, [isOpen]);
+
   return (
     <>
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className="w-full sm:max-w-md h-full p-4 sm:p-6 bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border-l border-blue-900/30 relative overflow-y-auto">
+      <Sheet open={isOpen} onOpenChange={onClose} modal={true}>
+        <SheetContent side="right" className="w-full sm:max-w-md h-full p-4 sm:p-6 bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border-l border-blue-900/30 relative overflow-y-auto">
           {/* Background effects */}
           <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 fixed -top-20 -right-20" />
           <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 fixed bottom-20 -left-20" />

@@ -27,7 +27,7 @@ const Categories = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {categories.map((category) => {
           const products = getProductsByCategory(category.id);
           const categoryValue = getCategoryValue(category.id);
@@ -38,12 +38,12 @@ const Categories = () => {
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg flex items-center">
                     <Package className="h-5 w-5 mr-2 text-inventory-primary" />
-                    {category.name}
+                    <span className="truncate">{category.name}</span>
                   </CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 flex-shrink-0 ml-2"
                     onClick={() => setEditingCategory(category)}
                   >
                     <Edit className="h-4 w-4" />
@@ -51,7 +51,7 @@ const Categories = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-gray-500 mb-4 line-clamp-2">
                   {category.description || "No description available"}
                 </p>
 

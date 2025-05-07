@@ -46,7 +46,7 @@ const Inventory = () => {
       <h1 className="text-2xl font-bold mb-6">Inventory Management</h1>
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-200 grid gap-3 grid-cols-1 md:grid-cols-3">
+        <div className="p-4 border-b border-gray-200 grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
@@ -95,17 +95,17 @@ const Inventory = () => {
               return (
                 <div
                   key={product.id}
-                  className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center"
+                  className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
                 >
-                  <div>
-                    <div className="flex items-center">
+                  <div className="w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-medium text-gray-900">{product.name}</h3>
                       {isOutOfStock ? (
-                        <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-red-100 text-inventory-danger">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-inventory-danger">
                           Out of stock
                         </span>
                       ) : isLowStock ? (
-                        <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-inventory-lowStock">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-inventory-lowStock">
                           Low stock
                         </span>
                       ) : null}

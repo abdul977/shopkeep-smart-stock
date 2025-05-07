@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { CartItem } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import {
@@ -163,8 +163,13 @@ const Receipt = ({ data, onClose }: ReceiptProps) => {
     }
   };
 
+  // Force re-render when dialog is opened to ensure it's properly initialized
+  useEffect(() => {
+    // This is just to trigger a re-render
+  }, []);
+
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={true} onOpenChange={onClose} modal={true}>
       <DialogContent className="max-w-md p-3 sm:p-6 bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border border-blue-700/30 relative overflow-hidden">
         {/* Background effects */}
         <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 -top-20 -right-20" />

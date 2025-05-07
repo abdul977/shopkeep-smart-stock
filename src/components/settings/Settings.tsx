@@ -102,7 +102,7 @@ const Settings = () => {
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
       <Tabs defaultValue="store" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap gap-1">
           <TabsTrigger value="store">Store</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>

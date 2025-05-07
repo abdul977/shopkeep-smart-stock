@@ -60,7 +60,7 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
 
             return (
               <CardContainer key={product.id} className="overflow-hidden flex flex-col h-full">
-                <div className="h-40 sm:h-48 bg-blue-900/40 flex items-center justify-center border-b border-blue-700/30">
+                <div className="h-36 sm:h-40 md:h-48 bg-blue-900/40 flex items-center justify-center border-b border-blue-700/30">
                   {product.imageUrl ? (
                     <img
                       src={product.imageUrl}
@@ -69,8 +69,8 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                     />
                   ) : (
                     <div className="text-blue-400 flex flex-col items-center">
-                      <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 mb-2" />
-                      <span>No image</span>
+                      <ShoppingCart className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 mb-2" />
+                      <span className="text-sm sm:text-base">No image</span>
                     </div>
                   )}
                 </div>
@@ -122,7 +122,11 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
 
                       <Button
                         className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                        onClick={() => addItem(product)}
+                        onClick={() => {
+                          // Instead of adding 1 more, just ensure the current quantity is set
+                          // This prevents incrementing the quantity when "Update Cart" is clicked
+                          updateQuantity(product.id, cartItem.quantity);
+                        }}
                         disabled={product.quantityInStock <= 0 || cartItem.quantity >= product.quantityInStock}
                       >
                         Update Cart

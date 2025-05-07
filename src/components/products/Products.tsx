@@ -94,13 +94,13 @@ const Products = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="whitespace-nowrap">Name</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">SKU</TableHead>
+                  <TableHead className="whitespace-nowrap hidden md:table-cell">Category</TableHead>
+                  <TableHead className="whitespace-nowrap">Price</TableHead>
+                  <TableHead className="whitespace-nowrap">Stock</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">Unit</TableHead>
+                  <TableHead className="whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -114,13 +114,13 @@ const Products = () => {
 
                   return (
                     <TableRow key={product.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium whitespace-nowrap">
                         {product.name}
                       </TableCell>
-                      <TableCell className="text-sm">{product.sku}</TableCell>
-                      <TableCell>{category?.name}</TableCell>
-                      <TableCell>{formatCurrency(product.unitPrice)}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-sm hidden sm:table-cell">{product.sku}</TableCell>
+                      <TableCell className="hidden md:table-cell">{category?.name}</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatCurrency(product.unitPrice)}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <span
                           className={
                             isLowStock
@@ -136,7 +136,7 @@ const Products = () => {
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>{product.unit}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{product.unit}</TableCell>
                       <TableCell>
                         <Button
                           variant="ghost"

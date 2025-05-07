@@ -89,9 +89,10 @@ const Sidebar = ({
         />
 
         <div
-          className={`fixed top-0 left-0 h-screen w-[85%] max-w-[300px] bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border-r border-blue-900/30 z-50 transform transition-all duration-300 ease-in-out shadow-xl ${
+          className={`fixed top-0 left-0 h-screen w-[85%] max-w-[280px] bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border-r border-blue-900/30 z-50 transform transition-all duration-300 ease-in-out shadow-xl ${
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           } flex flex-col relative overflow-hidden`}
+          style={{ position: 'fixed', left: 0, top: 0 }}
         >
           {/* Background effects */}
           <GlowCircle className="w-[200px] h-[200px] bg-blue-800/30 -top-20 -right-20" />

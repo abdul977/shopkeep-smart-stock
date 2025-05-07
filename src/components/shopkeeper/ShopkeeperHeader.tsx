@@ -112,9 +112,9 @@ const ShopkeeperHeader = ({
         <div className="md:hidden">
           {/* Top Row - Logo and Cart */}
           <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-w-[70%]">
               {storeSettings?.logoUrl && (
-                <div className="h-8 w-8 bg-blue-900/40 rounded-full flex items-center justify-center overflow-hidden border border-blue-700/30">
+                <div className="h-8 w-8 bg-blue-900/40 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden border border-blue-700/30">
                   <img
                     src={storeSettings.logoUrl}
                     alt={storeSettings.storeName}
@@ -125,7 +125,7 @@ const ShopkeeperHeader = ({
                   />
                 </div>
               )}
-              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
+              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 truncate">
                 {storeSettings?.storeName || "SmartStock"}
               </h1>
             </div>
@@ -147,13 +147,13 @@ const ShopkeeperHeader = ({
 
           {/* Search Row */}
           <div className="flex gap-2 items-center">
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-w-0">
               <Input
                 type="text"
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 w-full bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50"
+                className="pr-10 w-full bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50 text-sm"
               />
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
             </div>
@@ -162,10 +162,10 @@ const ShopkeeperHeader = ({
               variant="outline"
               size="icon"
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex-shrink-0 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100"
+              className="flex-shrink-0 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50 hover:text-blue-100 h-9 w-9"
               aria-label="Filter products"
             >
-              <Filter className="h-5 w-5" />
+              <Filter className="h-4 w-4" />
             </Button>
           </div>
 
@@ -185,10 +185,10 @@ const ShopkeeperHeader = ({
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 mt-2">
                 <Button
                   variant={selectedCategory === "all" ? "default" : "outline"}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start text-sm h-9 ${
                     selectedCategory === "all"
                       ? "bg-blue-600 hover:bg-blue-700"
                       : "border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
@@ -205,7 +205,7 @@ const ShopkeeperHeader = ({
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "outline"}
-                    className={`w-full justify-start ${
+                    className={`w-full justify-start text-sm h-9 truncate ${
                       selectedCategory === category.id
                         ? "bg-blue-600 hover:bg-blue-700"
                         : "border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"

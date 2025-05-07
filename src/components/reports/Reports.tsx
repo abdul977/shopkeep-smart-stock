@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BarChart, PieChart, Package, Archive, FilePlus, Download, Plus, Loader2 } from "lucide-react";
+import { BarChart, PieChart, Package, Archive, FilePlus, Download, Plus, Loader2, Eye } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { exportReportToPdf, exportToPdf } from "@/lib/pdfUtils";
 import GenerateReportDialog from "./GenerateReportDialog";
@@ -179,43 +179,48 @@ const Reports = () => {
     <div className="p-6 animate-fade-in">
       <h1 className="text-2xl font-bold mb-6">Inventory Reports</h1>
 
-      <div className="flex flex-wrap justify-between items-center mb-6">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button
             variant={selectedReport === "inventory" ? "default" : "outline"}
             onClick={() => viewReport("inventory")}
-            className={selectedReport === "inventory" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}
+            className={`text-xs sm:text-sm h-8 sm:h-9 ${selectedReport === "inventory" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}`}
+            size="sm"
           >
-            <Package className="h-4 w-4 mr-2" /> Inventory Valuation
+            <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Inventory
           </Button>
           <Button
             variant={selectedReport === "category" ? "default" : "outline"}
             onClick={() => viewReport("category")}
-            className={selectedReport === "category" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}
+            className={`text-xs sm:text-sm h-8 sm:h-9 ${selectedReport === "category" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}`}
+            size="sm"
           >
-            <PieChart className="h-4 w-4 mr-2" /> Category Breakdown
+            <PieChart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Categories
           </Button>
           <Button
             variant={selectedReport === "lowStock" ? "default" : "outline"}
             onClick={() => viewReport("lowStock")}
-            className={selectedReport === "lowStock" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}
+            className={`text-xs sm:text-sm h-8 sm:h-9 ${selectedReport === "lowStock" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}`}
+            size="sm"
           >
-            <Archive className="h-4 w-4 mr-2" /> Low Stock Items
+            <Archive className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Low Stock
           </Button>
           <Button
             variant={selectedReport === "saved" ? "default" : "outline"}
             onClick={() => viewReport("saved")}
-            className={selectedReport === "saved" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}
+            className={`text-xs sm:text-sm h-8 sm:h-9 ${selectedReport === "saved" ? "bg-inventory-primary hover:bg-inventory-primary/90" : ""}`}
+            size="sm"
           >
-            <FilePlus className="h-4 w-4 mr-2" /> Saved Reports
+            <FilePlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Saved
           </Button>
         </div>
 
         <Button
           onClick={() => setGenerateDialogOpen(true)}
-          className="bg-inventory-primary hover:bg-inventory-primary/90"
+          className="bg-inventory-primary hover:bg-inventory-primary/90 text-xs sm:text-sm h-8 sm:h-9"
+          size="sm"
         >
-          <Plus className="h-4 w-4 mr-2" /> Generate Report
+          <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Generate Report
         </Button>
       </div>
 
@@ -252,12 +257,12 @@ const Reports = () => {
               <Table ref={inventoryTableRef}>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Unit Price</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead className="text-right">Total Value</TableHead>
+                    <TableHead className="whitespace-nowrap">Product Name</TableHead>
+                    <TableHead className="whitespace-nowrap hidden sm:table-cell">SKU</TableHead>
+                    <TableHead className="whitespace-nowrap hidden md:table-cell">Category</TableHead>
+                    <TableHead className="whitespace-nowrap">Unit Price</TableHead>
+                    <TableHead className="whitespace-nowrap">Quantity</TableHead>
+                    <TableHead className="whitespace-nowrap text-right">Total Value</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -266,12 +271,12 @@ const Reports = () => {
                     const productValue = product.unitPrice * product.quantityInStock;
                     return (
                       <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.sku}</TableCell>
-                        <TableCell>{category?.name}</TableCell>
-                        <TableCell>{formatCurrency(product.unitPrice)}</TableCell>
-                        <TableCell>{product.quantityInStock}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(productValue)}</TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">{product.name}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{product.sku}</TableCell>
+                        <TableCell className="hidden md:table-cell">{category?.name}</TableCell>
+                        <TableCell className="whitespace-nowrap">{formatCurrency(product.unitPrice)}</TableCell>
+                        <TableCell className="whitespace-nowrap">{product.quantityInStock}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">{formatCurrency(productValue)}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -308,9 +313,9 @@ const Reports = () => {
                 <Table ref={categoryTableRef}>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Products</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
+                      <TableHead className="whitespace-nowrap">Category</TableHead>
+                      <TableHead className="whitespace-nowrap">Products</TableHead>
+                      <TableHead className="whitespace-nowrap text-right">Value</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -412,12 +417,12 @@ const Reports = () => {
               <Table ref={lowStockTableRef}>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Current Stock</TableHead>
-                    <TableHead>Min. Required</TableHead>
-                    <TableHead>Unit Price</TableHead>
-                    <TableHead className="text-right">Restock Value</TableHead>
+                    <TableHead className="whitespace-nowrap">Product Name</TableHead>
+                    <TableHead className="whitespace-nowrap hidden md:table-cell">Category</TableHead>
+                    <TableHead className="whitespace-nowrap">Current Stock</TableHead>
+                    <TableHead className="whitespace-nowrap hidden sm:table-cell">Min. Required</TableHead>
+                    <TableHead className="whitespace-nowrap hidden sm:table-cell">Unit Price</TableHead>
+                    <TableHead className="whitespace-nowrap text-right">Restock Value</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -427,15 +432,15 @@ const Reports = () => {
                     const restockValue = shortage * product.unitPrice;
                     return (
                       <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{category?.name}</TableCell>
-                        <TableCell className={product.quantityInStock === 0 ? "text-red-600 font-bold" : "text-amber-600 font-medium"}>
+                        <TableCell className="font-medium whitespace-nowrap">{product.name}</TableCell>
+                        <TableCell className="hidden md:table-cell">{category?.name}</TableCell>
+                        <TableCell className={`whitespace-nowrap ${product.quantityInStock === 0 ? "text-red-600 font-bold" : "text-amber-600 font-medium"}`}>
                           {product.quantityInStock} {product.unit}
                           {product.quantityInStock !== 1 ? "s" : ""}
                         </TableCell>
-                        <TableCell>{product.minStockLevel}</TableCell>
-                        <TableCell>{formatCurrency(product.unitPrice)}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="hidden sm:table-cell">{product.minStockLevel}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{formatCurrency(product.unitPrice)}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
                           {formatCurrency(restockValue)}
                         </TableCell>
                       </TableRow>
@@ -479,11 +484,11 @@ const Reports = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="whitespace-nowrap">Title</TableHead>
+                      <TableHead className="whitespace-nowrap hidden sm:table-cell">Type</TableHead>
+                      <TableHead className="whitespace-nowrap hidden md:table-cell">Created</TableHead>
+                      <TableHead className="whitespace-nowrap hidden lg:table-cell">Description</TableHead>
+                      <TableHead className="whitespace-nowrap text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -495,24 +500,27 @@ const Reports = () => {
 
                       return (
                         <TableRow key={report.id}>
-                          <TableCell className="font-medium">{report.title}</TableCell>
-                          <TableCell>{reportTypeLabel}</TableCell>
-                          <TableCell>{report.createdAt.toLocaleDateString()}</TableCell>
-                          <TableCell className="truncate max-w-[200px]">
+                          <TableCell className="font-medium whitespace-nowrap">{report.title}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{reportTypeLabel}</TableCell>
+                          <TableCell className="hidden md:table-cell whitespace-nowrap">{report.createdAt.toLocaleDateString()}</TableCell>
+                          <TableCell className="truncate max-w-[200px] hidden lg:table-cell">
                             {report.description || "No description"}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-1 sm:gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="h-8 w-8 p-0 sm:w-auto sm:px-3"
                                 onClick={() => setSelectedSavedReport(report.id)}
                               >
-                                View
+                                <span className="hidden sm:inline">View</span>
+                                <Eye className="h-4 w-4 sm:hidden" />
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="h-8 w-8 p-0 sm:w-auto sm:px-3"
                                 onClick={() => exportSavedReport(report.id)}
                                 disabled={isExporting}
                               >
