@@ -121,7 +121,7 @@ const Sales = () => {
           shopkeeper_id,
           products(name, unit_price, id)
         `)
-        .or(`user_id.eq.${user?.id},user_id.is.null`) // Include both user's transactions and null user_id
+        .eq('user_id', user?.id) // Only include the current user's transactions
         .eq('transaction_type', 'sale')
         .lt('quantity', 0) // Sales are recorded as negative quantities
         .order('transaction_date', { ascending: false });
