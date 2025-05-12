@@ -36,6 +36,16 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
     return items.find((item) => item.product.id === productId);
   };
 
+  const handleAddToCart = (product) => {
+    console.log("Adding to cart:", product);
+    addItem(product);
+  };
+
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    console.log("Updating quantity:", productId, newQuantity);
+    updateQuantity(productId, newQuantity);
+  };
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4 text-blue-100">Products</h2>
@@ -148,7 +158,7 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                   ) : (
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm h-9 sm:h-10"
-                      onClick={() => addItem(product)}
+                      onClick={() => handleAddToCart(product)}
                       disabled={product.quantityInStock <= 0}
                     >
                       <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />

@@ -64,6 +64,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [savedReceipts]);
 
   const addItem = (product: Product, quantity = 1) => {
+    // Validate product and quantity
+    if (!product || !product.id) {
+      console.error("Invalid product:", product);
+      return;
+    }
+    
+    if (quantity <= 0) {
+      quantity = 1;
+    }
+
     // Check if product is already in cart
     const existingItem = items.find((item) => item.product.id === product.id);
 
@@ -100,12 +110,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeItem = (productId: string) => {
+    if (!productId) return;
+    
     const updatedItems = items.filter((item) => item.product.id !== productId);
     setItems(updatedItems);
     toast.success("Item removed from cart");
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
+    if (!productId) return;
+    
     // Ensure quantity is at least 1
     const newQuantity = Math.max(1, quantity);
 

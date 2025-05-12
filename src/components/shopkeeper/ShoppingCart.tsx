@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,11 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
     paymentMethod?: string;
     cashierName?: string;
   } | null>(null);
+
+  // Debug logging to verify items are being properly received
+  useEffect(() => {
+    console.log("Cart items in ShoppingCart:", items);
+  }, [items]);
 
   const handleCheckout = async () => {
     if (items.length === 0) {
