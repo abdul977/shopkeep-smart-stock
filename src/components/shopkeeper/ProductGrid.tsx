@@ -1,9 +1,11 @@
-import { useInventory } from "@/contexts/InventoryContext";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { CardContainer } from "@/components/ui/global-styles";
+import { useAuth } from "@/contexts/AuthContext";
+import { useOwnerData } from "@/hooks/useOwnerData";
+import { Product, Category } from "@/types/inventory";
 
 interface ProductGridProps {
   searchTerm: string;
@@ -11,20 +13,21 @@ interface ProductGridProps {
 }
 
 const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
-  const { products, categories } = useInventory();
-  const { addItem, items, updateQuantity } = useCart();
+  const { shopkeeperUser } = useAuth();
+  const { products, categories, loading, error } = useOwnerData(shopkeeperUser?.ownerId);
+  const { addItem, items, updateQuantity, removeItem } = useCart();
 
   // Filter products based on search term and selected category
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products?.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || product.categoryId === selectedCategory;
     return matchesSearch && matchesCategory;
-  });
+  }) || [];
 
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
-    const category = categories.find((cat) => cat.id === categoryId);
+    const category = categories?.find((cat) => cat.id === categoryId);
     return category ? category.name : "Uncategorized";
   };
 
@@ -80,13 +83,13 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                     {getCategoryName(product.categoryId)}
                   </div>
                   <h3 className="font-semibold text-base sm:text-lg mb-1 line-clamp-1 text-blue-100">{product.name}</h3>
-                  <p className="text-blue-300/70 text-xs sm:text-sm mb-2 line-clamp-2">
+                  <p className="text-blue-200 text-xs sm:text-sm mb-2 line-clamp-2">
                     {product.description}
                   </p>
                   <div className="text-base sm:text-lg font-bold text-white">
                     {formatCurrency(product.unitPrice)}
                   </div>
-                  <div className="text-xs sm:text-sm text-blue-300/70 mt-1">
+                  <div className="text-xs sm:text-sm text-blue-200 mt-1">
                     {product.quantityInStock > 0
                       ? `${product.quantityInStock} ${product.unit}(s) in stock`
                       : "Out of stock"}
@@ -101,7 +104,16 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
-                          onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
+                          onClick={() => {
+                            if (cartItem.quantity > 1) {
+                              updateQuantity(product.id, cartItem.quantity - 1);
+                            } else {
+                              // Remove item if quantity would be 0
+                              const updatedItems = items.filter(item => item.product.id !== product.id);
+                              // We need to call a function that actually updates the state
+                              removeItem(product.id);
+                            }
+                          }}
                           disabled={cartItem.quantity <= 1}
                         >
                           <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -113,7 +125,7 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8 border-blue-700/50 bg-blue-900/30 text-blue-200 hover:bg-blue-800/50"
-                          onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
+                          onClick={() => addItem(product, 1)}
                           disabled={cartItem.quantity >= product.quantityInStock}
                         >
                           <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -123,13 +135,14 @@ const ProductGrid = ({ searchTerm, selectedCategory }: ProductGridProps) => {
                       <Button
                         className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
                         onClick={() => {
-                          // Instead of adding 1 more, just ensure the current quantity is set
-                          // This prevents incrementing the quantity when "Update Cart" is clicked
-                          updateQuantity(product.id, cartItem.quantity);
+                          // Remove the item and add it again with the current quantity
+                          // This ensures the cart is updated with the latest product data
+                          const currentQuantity = cartItem.quantity;
+                          addItem(product, 0); // Add with 0 to just refresh the product data without changing quantity
                         }}
-                        disabled={product.quantityInStock <= 0 || cartItem.quantity >= product.quantityInStock}
+                        disabled={product.quantityInStock <= 0}
                       >
-                        Update Cart
+                        Refresh Cart
                       </Button>
                     </div>
                   ) : (

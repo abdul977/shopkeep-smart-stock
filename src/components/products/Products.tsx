@@ -139,9 +139,10 @@ const Products = () => {
                       <TableCell className="hidden sm:table-cell">{product.unit}</TableCell>
                       <TableCell>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => setEditingProduct(product)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                         >
                           Edit
                         </Button>

@@ -155,17 +155,17 @@ const ShopkeeperContent = () => {
 
         <main className="container mx-auto px-4 py-6 relative z-10">
           {!user && (!shareId || shareId === 'demo') && !window.location.pathname.includes('5c0d304b-5b84-48a4-a9af-dd0d182cde87') && (
-            <div className="bg-blue-900/30 border border-blue-700/30 rounded-md p-3 mb-4 text-blue-200 text-sm">
+            <div className="bg-blue-900/50 border border-blue-700/50 rounded-md p-3 mb-4 text-blue-100 text-sm">
               <p className="font-medium">Demo Mode</p>
-              <p>You're viewing demo inventory data. <a href="/signup" className="text-blue-300 hover:text-blue-200 underline">Sign up</a> to manage your own inventory.</p>
+              <p>You're viewing demo inventory data. <a href="/signup" className="text-blue-300 hover:text-blue-100 underline">Sign up</a> to manage your own inventory.</p>
             </div>
           )}
 
           {storeSettings && (window.location.pathname.includes('5c0d304b-5b84-48a4-a9af-dd0d182cde87') || (shareId && shareId !== 'demo')) && (
-            <div className="bg-blue-900/30 border border-blue-700/30 rounded-md p-4 mb-4 text-blue-200">
+            <div className="bg-blue-900/50 border border-blue-700/50 rounded-md p-4 mb-4 text-blue-100">
               <div className="flex items-center gap-3">
                 {storeSettings.logoUrl && (
-                  <div className="h-12 w-12 bg-blue-900/40 rounded-full flex items-center justify-center overflow-hidden border border-blue-700/30">
+                  <div className="h-12 w-12 bg-blue-900/60 rounded-full flex items-center justify-center overflow-hidden border border-blue-700/50">
                     <img
                       src={storeSettings.logoUrl}
                       alt={storeSettings.storeName}
@@ -178,8 +178,8 @@ const ShopkeeperContent = () => {
                 )}
                 <div>
                   <p className="font-medium text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">{storeSettings.storeName}</p>
-                  {storeSettings.location && <p className="text-sm text-blue-300/70">{storeSettings.location}</p>}
-                  {storeSettings.phoneNumber && <p className="text-sm text-blue-300/70">{storeSettings.phoneNumber}</p>}
+                  {storeSettings.location && <p className="text-sm text-blue-200">{storeSettings.location}</p>}
+                  {storeSettings.phoneNumber && <p className="text-sm text-blue-200">{storeSettings.phoneNumber}</p>}
                 </div>
               </div>
             </div>

@@ -12,6 +12,8 @@ import {
   LogOut,
   ShoppingCart,
   Share2,
+  Users,
+  DollarSign,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/contexts/StoreContext";
@@ -45,8 +47,15 @@ const Sidebar = ({
     { id: "products", label: "Products", icon: Box },
     { id: "inventory", label: "Inventory", icon: Package },
     { id: "categories", label: "Categories", icon: Tag },
+    { id: "sales", label: "Sales", icon: DollarSign },
     { id: "reports", label: "Reports", icon: BarChart },
     { id: "settings", label: "Settings", icon: Settings },
+  ];
+
+  const shopActions = [
+    { id: "open-shop", label: "Open Shop", icon: ShoppingCart, onClick: () => openShopInNewTab(), color: "text-green-300" },
+    { id: "share-shop", label: "Share Shop", icon: Share2, onClick: () => setShareDialogOpen(true), color: "text-blue-300" },
+    { id: "manage-shopkeepers", label: "Manage Shopkeepers", icon: Users, onClick: () => navigate("/manage-shopkeepers"), color: "text-blue-300" },
   ];
 
   const handleSignOut = async () => {
@@ -146,21 +155,16 @@ const Sidebar = ({
             {/* Shop Actions */}
             <div className="px-3 py-2 border-t border-blue-900/30 mt-2">
               <h3 className="text-xs uppercase text-blue-300/70 font-semibold px-3 mb-2 mt-2">Shop Actions</h3>
-              <button
-                onClick={openShopInNewTab}
-                className="w-full flex items-center p-3 text-green-300 hover:bg-blue-800/30 rounded-md mb-1"
-              >
-                <ShoppingCart size={20} />
-                <span className="ml-3">Open Shop</span>
-              </button>
-
-              <button
-                onClick={() => setShareDialogOpen(true)}
-                className="w-full flex items-center p-3 text-blue-300 hover:bg-blue-800/30 rounded-md"
-              >
-                <Share2 size={20} />
-                <span className="ml-3">Share Shop</span>
-              </button>
+              {shopActions.map((action) => (
+                <button
+                  key={action.id}
+                  onClick={action.onClick}
+                  className={`w-full flex items-center p-3 ${action.color} hover:bg-blue-800/30 rounded-md mb-1`}
+                >
+                  <action.icon size={20} />
+                  <span className="ml-3">{action.label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -239,25 +243,18 @@ const Sidebar = ({
             <h3 className="text-xs uppercase text-blue-300/70 font-semibold px-3 mb-2">Shop Actions</h3>
           )}
           <div className="flex flex-col space-y-2">
-            <button
-              onClick={openShopInNewTab}
-              className={`w-full flex items-center p-3 text-green-300 hover:bg-blue-800/30 rounded-md ${
-                collapsed ? "justify-center" : ""
-              }`}
-            >
-              <ShoppingCart size={20} />
-              {!collapsed && <span className="ml-3">Open Shop</span>}
-            </button>
-
-            <button
-              onClick={() => setShareDialogOpen(true)}
-              className={`w-full flex items-center p-3 text-blue-300 hover:bg-blue-800/30 rounded-md ${
-                collapsed ? "justify-center" : ""
-              }`}
-            >
-              <Share2 size={20} />
-              {!collapsed && <span className="ml-3">Share Shop</span>}
-            </button>
+            {shopActions.map((action) => (
+              <button
+                key={action.id}
+                onClick={action.onClick}
+                className={`w-full flex items-center p-3 ${action.color} hover:bg-blue-800/30 rounded-md ${
+                  collapsed ? "justify-center" : ""
+                }`}
+              >
+                <action.icon size={20} />
+                {!collapsed && <span className="ml-3">{action.label}</span>}
+              </button>
+            ))}
           </div>
         </div>
 

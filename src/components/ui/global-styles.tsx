@@ -41,7 +41,7 @@ interface CardContainerProps {
 
 export const CardContainer = ({ children, className = "" }: CardContainerProps) => {
   return (
-    <div className={`bg-gradient-to-br from-blue-900/40 to-blue-800/20 p-2 sm:p-6 rounded-md sm:rounded-xl border border-blue-700/30 backdrop-blur-sm overflow-hidden ${className}`}>
+    <div className={`bg-gradient-to-br from-blue-900/60 to-blue-800/40 p-2 sm:p-6 rounded-md sm:rounded-xl border border-blue-700/50 backdrop-blur-sm overflow-hidden ${className}`}>
       {children}
     </div>
   );
@@ -79,7 +79,7 @@ export const SectionContainer = ({
               </h2>
             )}
             {subtitle && !centered && (
-              <p className="text-blue-300/70 max-w-2xl">{subtitle}</p>
+              <p className="text-blue-200 max-w-2xl">{subtitle}</p>
             )}
           </div>
         )}
@@ -126,7 +126,7 @@ export const OutlineButton = ({
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) => {
   return (
     <button
-      className={`text-blue-300 hover:text-blue-200 transition-colors px-3 py-1 border border-blue-500/30 rounded-md bg-blue-900/20 backdrop-blur-sm ${className}`}
+      className={`text-blue-200 hover:text-blue-100 transition-colors px-3 py-1 border border-blue-500/50 rounded-md bg-blue-900/40 backdrop-blur-sm ${className}`}
       {...props}
     >
       {children}
@@ -141,7 +141,7 @@ export const OutlineLink = ({
 }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
   return (
     <a
-      className={`text-blue-300 hover:text-blue-200 transition-colors px-3 py-1 border border-blue-500/30 rounded-md bg-blue-900/20 backdrop-blur-sm inline-block ${className}`}
+      className={`text-blue-200 hover:text-blue-100 transition-colors px-3 py-1 border border-blue-500/50 rounded-md bg-blue-900/40 backdrop-blur-sm inline-block ${className}`}
       {...props}
     >
       {children}

@@ -6,6 +6,7 @@ import Dashboard from "@/components/dashboard/Dashboard";
 import Products from "@/components/products/Products";
 import Inventory from "@/components/inventory/Inventory";
 import Categories from "@/components/categories/Categories";
+import Sales from "@/components/sales/Sales";
 import Reports from "@/components/reports/Reports";
 import Settings from "@/components/settings/Settings";
 import { Menu } from "lucide-react";
@@ -37,6 +38,8 @@ const MainContent = () => {
         return <Inventory />;
       case "categories":
         return <Categories />;
+      case "sales":
+        return <Sales />;
       case "reports":
         return <Reports />;
       case "settings":

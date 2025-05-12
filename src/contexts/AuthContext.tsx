@@ -2,15 +2,28 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import * as bcrypt from "bcryptjs";
+
+// Define a type for shopkeeper user
+export interface ShopkeeperUser {
+  id: string;
+  email: string;
+  name: string;
+  ownerId: string;
+  active: boolean;
+}
 
 type AuthContextType = {
   session: Session | null;
   user: User | null;
+  shopkeeperUser: ShopkeeperUser | null;
   loading: boolean;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInShopkeeper: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  isShopkeeper: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,7 +31,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [shopkeeperUser, setShopkeeperUser] = useState<ShopkeeperUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isShopkeeper, setIsShopkeeper] = useState(false);
+
+  // Check for shopkeeper in localStorage on initial load
+  useEffect(() => {
+    const storedShopkeeper = localStorage.getItem('shopkeeper');
+    if (storedShopkeeper) {
+      try {
+        const shopkeeper = JSON.parse(storedShopkeeper);
+        setShopkeeperUser(shopkeeper);
+        setIsShopkeeper(true);
+      } catch (error) {
+        console.error("Error parsing shopkeeper from localStorage:", error);
+        localStorage.removeItem('shopkeeper');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Get initial session
@@ -127,9 +157,89 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signInShopkeeper = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+
+      console.log("Attempting to sign in shopkeeper with email:", email);
+
+      // First, just check if the shopkeeper exists by email
+      const { data: shopkeepers, error: fetchError } = await supabase
+        .from('shopkeepers')
+        .select('*')
+        .eq('email', email);
+
+      if (fetchError) {
+        console.error("Error fetching shopkeeper:", fetchError);
+        throw new Error("Error accessing shopkeeper account");
+      }
+
+      console.log("Shopkeeper query result:", shopkeepers ? `Found ${shopkeepers.length} records` : "No data returned");
+
+      // Check if we found any shopkeeper with this email
+      if (!shopkeepers || shopkeepers.length === 0) {
+        throw new Error("Invalid email or password");
+      }
+
+      // Get the first shopkeeper with this email
+      const shopkeeperData = shopkeepers[0];
+
+      // Check if the shopkeeper is active
+      if (!shopkeeperData.active) {
+        throw new Error("This account has been deactivated. Please contact the store owner.");
+      }
+
+      // Verify the password
+      console.log("Verifying password...");
+      const isPasswordValid = await bcrypt.compare(password, shopkeeperData.password);
+
+      if (!isPasswordValid) {
+        console.log("Password verification failed");
+        throw new Error("Invalid email or password");
+      }
+
+      console.log("Password verified successfully");
+
+      // Set the shopkeeper user
+      const shopkeeper: ShopkeeperUser = {
+        id: shopkeeperData.id,
+        email: shopkeeperData.email,
+        name: shopkeeperData.name,
+        ownerId: shopkeeperData.owner_id,
+        active: shopkeeperData.active
+      };
+
+      setShopkeeperUser(shopkeeper);
+      setIsShopkeeper(true);
+
+      // Store shopkeeper info in localStorage for persistence
+      localStorage.setItem('shopkeeper', JSON.stringify(shopkeeper));
+
+      console.log("Shopkeeper login successful:", shopkeeper.name);
+      toast.success("Signed in as shopkeeper successfully!");
+    } catch (error: any) {
+      console.error("Shopkeeper login error:", error);
+      toast.error(error.message || "Invalid login credentials");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     try {
       setLoading(true);
+
+      // If it's a shopkeeper, just clear the shopkeeper state
+      if (isShopkeeper) {
+        setShopkeeperUser(null);
+        setIsShopkeeper(false);
+        localStorage.removeItem('shopkeeper');
+        toast.success("Signed out successfully");
+        return;
+      }
+
+      // Otherwise, sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success("Signed out successfully");
@@ -161,11 +271,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         session,
         user,
+        shopkeeperUser,
         loading,
         signUp,
         signIn,
+        signInShopkeeper,
         signOut,
         resetPassword,
+        isShopkeeper,
       }}
     >
       {children}

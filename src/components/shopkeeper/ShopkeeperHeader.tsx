@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useInventory } from "@/contexts/InventoryContext";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useOwnerData } from "@/hooks/useOwnerData";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,8 @@ const ShopkeeperHeader = ({
   setSelectedCategory,
   onCartClick,
 }: ShopkeeperHeaderProps) => {
-  const { categories } = useInventory();
+  const { shopkeeperUser } = useAuth();
+  const { categories } = useOwnerData(shopkeeperUser?.ownerId);
   const { getTotalItems } = useCart();
   const { storeSettings } = useStore();
   const isMobile = useIsMobile();
@@ -69,9 +71,9 @@ const ShopkeeperHeader = ({
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50"
+              className="pr-10 bg-blue-900/50 border-blue-700/70 text-white placeholder:text-blue-300"
             />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-200" />
           </div>
 
           <div className="flex items-center gap-4">
@@ -153,9 +155,9 @@ const ShopkeeperHeader = ({
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 w-full bg-blue-900/30 border-blue-700/50 text-white placeholder:text-blue-400/50 text-sm"
+                className="pr-10 w-full bg-blue-900/50 border-blue-700/70 text-white placeholder:text-blue-300 text-sm"
               />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-200" />
             </div>
 
             <Button

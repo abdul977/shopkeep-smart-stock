@@ -237,6 +237,46 @@ export interface Database {
         }
         Relationships: []
       }
+      shopkeepers: {
+        Row: {
+          id: string
+          owner_id: string
+          email: string
+          password: string
+          name: string
+          active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          email: string
+          password: string
+          name: string
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          email?: string
+          password?: string
+          name?: string
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopkeepers_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

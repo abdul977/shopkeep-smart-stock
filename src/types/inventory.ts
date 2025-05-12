@@ -58,3 +58,13 @@ export type Report = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type Shopkeeper = {
+  id: string;
+  ownerId: string;
+  email: string;
+  name: string;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};

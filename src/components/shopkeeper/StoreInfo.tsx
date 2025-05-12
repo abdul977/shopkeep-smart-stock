@@ -55,7 +55,7 @@ const StoreInfo = () => {
                 {storeSettings?.location && <p className="text-blue-100"><strong className="text-blue-200">Address:</strong> {storeSettings.location}</p>}
                 {storeSettings?.phoneNumber && <p className="text-blue-100"><strong className="text-blue-200">Phone:</strong> {storeSettings.phoneNumber}</p>}
                 {storeSettings?.businessHours && <p className="text-blue-100"><strong className="text-blue-200">Hours:</strong> {storeSettings.businessHours}</p>}
-                <p className="text-[10px] sm:text-xs text-blue-300/70 mt-3 sm:mt-4">
+                <p className="text-[10px] sm:text-xs text-blue-200 mt-3 sm:mt-4">
                   This is a public storefront. All prices are in Nigerian Naira (₦).
                 </p>
               </div>
