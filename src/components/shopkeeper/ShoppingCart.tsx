@@ -111,15 +111,21 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
             ownerId: shopkeeperUser?.ownerId
           });
 
+          // Make sure we have the owner ID
+          if (!shopkeeperUser?.ownerId) {
+            console.error("Missing owner ID for shopkeeper transaction");
+            throw new Error("Missing owner ID for transaction. Please contact support.");
+          }
+
           const transactionData = {
             product_id: item.product.id,
             quantity: -item.quantity, // Negative for sales
             transaction_type: 'sale',
             notes: transactionNotes,
-            user_id: shopkeeperUser?.ownerId,
+            user_id: shopkeeperUser.ownerId, // Ensure this is set to the store owner's ID
             transaction_date: new Date().toISOString(),
             // Include shopkeeper_id in the transaction data if available
-            shopkeeper_id: shopkeeperUser?.id || null
+            shopkeeper_id: shopkeeperUser.id
           };
 
           console.log("Transaction data:", transactionData);

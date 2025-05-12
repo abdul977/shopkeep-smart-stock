@@ -110,6 +110,9 @@ const Sales = () => {
       setError(null);
 
       // Fetch all sales transactions (negative quantity in stock_transactions)
+      // The RLS policy will automatically filter to show only:
+      // 1. Transactions where user_id = auth.uid()
+      // 2. Transactions made by shopkeepers owned by the current user
       const { data, error } = await supabase
         .from('stock_transactions')
         .select(`
@@ -121,7 +124,6 @@ const Sales = () => {
           shopkeeper_id,
           products(name, unit_price, id)
         `)
-        .eq('user_id', user?.id) // Only include the current user's transactions
         .eq('transaction_type', 'sale')
         .lt('quantity', 0) // Sales are recorded as negative quantities
         .order('transaction_date', { ascending: false });
