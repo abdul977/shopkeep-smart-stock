@@ -109,6 +109,12 @@ const Sales = () => {
       setLoading(true);
       setError(null);
 
+      if (!user?.id) {
+        setError("You must be logged in to view sales data");
+        setLoading(false);
+        return;
+      }
+
       // Fetch all sales transactions (negative quantity in stock_transactions)
       // The RLS policy will automatically filter to show only:
       // 1. Transactions where user_id = auth.uid()
@@ -129,7 +135,19 @@ const Sales = () => {
         .order('transaction_date', { ascending: false });
 
       if (error) {
-        throw error;
+        console.error("Error fetching sales transactions:", error);
+        throw new Error(`Failed to fetch sales data: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        console.log("No sales transactions found for user:", user.id);
+        setTransactions([]);
+        setShopkeeperSales([]);
+        setTotalSales(0);
+        setTotalTransactions(0);
+        setTotalItems(0);
+        setLoading(false);
+        return;
       }
 
       // Debug log

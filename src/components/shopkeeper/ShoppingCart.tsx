@@ -43,6 +43,17 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
       return;
     }
 
+    // Validate shopkeeper and owner information first
+    if (!shopkeeperUser) {
+      toast.error("You must be logged in as a shopkeeper to process transactions");
+      return;
+    }
+
+    if (!shopkeeperUser.ownerId) {
+      toast.error("Missing store owner information. Please log out and log back in.");
+      return;
+    }
+
     // Check if any items exceed available stock
     const invalidItems = items.filter(item => {
       const product = products?.find(p => p.id === item.product.id);
@@ -111,10 +122,35 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
             ownerId: shopkeeperUser?.ownerId
           });
 
-          // Make sure we have the owner ID
-          if (!shopkeeperUser?.ownerId) {
+          // We already validated shopkeeperUser and ownerId at the beginning of handleCheckout,
+          // but let's double-check here to be extra safe
+          if (!shopkeeperUser) {
+            console.error("Missing shopkeeper user for transaction");
+            throw new Error("Missing shopkeeper information. Please log out and log back in.");
+          }
+
+          if (!shopkeeperUser.ownerId) {
             console.error("Missing owner ID for shopkeeper transaction");
             throw new Error("Missing owner ID for transaction. Please contact support.");
+          }
+
+          if (!shopkeeperUser.id) {
+            console.error("Missing shopkeeper ID for transaction");
+            throw new Error("Missing shopkeeper ID for transaction. Please contact support.");
+          }
+
+          // Verify that the product exists and belongs to the store owner
+          const productInInventory = products?.find(p => p.id === item.product.id);
+          if (!productInInventory) {
+            console.error("Product not found in inventory:", item.product.id);
+            throw new Error(`Product "${item.product.name}" not found in inventory. Please refresh and try again.`);
+          }
+
+          // Create transaction data with all required fields
+          // Ensure user_id is always set and is a string (not null or undefined)
+          const ownerId = shopkeeperUser.ownerId;
+          if (!ownerId) {
+            throw new Error("Owner ID is required for transactions. Please contact support.");
           }
 
           const transactionData = {
@@ -122,13 +158,18 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
             quantity: -item.quantity, // Negative for sales
             transaction_type: 'sale',
             notes: transactionNotes,
-            user_id: shopkeeperUser.ownerId, // Ensure this is set to the store owner's ID
+            user_id: ownerId, // Ensure this is set to the store owner's ID
             transaction_date: new Date().toISOString(),
-            // Include shopkeeper_id in the transaction data if available
-            shopkeeper_id: shopkeeperUser.id
+            shopkeeper_id: shopkeeperUser.id // Always include shopkeeper_id
           };
 
           console.log("Transaction data:", transactionData);
+
+          // Final validation check before sending to database
+          if (!transactionData.user_id) {
+            console.error("Missing user_id in transaction data:", transactionData);
+            throw new Error("Missing user_id for transaction. Please contact support.");
+          }
 
           const { error: transactionError } = await supabase
             .from('stock_transactions')
@@ -165,7 +206,7 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
         toast.success("Checkout completed successfully!");
 
         // Save the receipt for future reference and local storage
-        const receiptId = saveReceipt({
+        saveReceipt({
           items: receiptData.items,
           total: receiptData.total,
           date: receiptData.date,
