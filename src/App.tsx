@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { StoreProvider } from "./contexts/StoreContext";
 import { ShopkeeperProvider } from "./contexts/ShopkeeperContext";
+import BlueThemeProvider from "./components/ui/BlueThemeProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ShopkeeperProtectedRoute from "./components/auth/ShopkeeperProtectedRoute";
 import Index from "./pages/Index";
@@ -28,17 +29,18 @@ const App = () => (
     <AuthProvider>
       <StoreProvider>
         <ShopkeeperProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+          <BlueThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
                 {/* Protected routes */}
                 <Route
@@ -90,7 +92,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             </BrowserRouter>
-          </TooltipProvider>
+            </TooltipProvider>
+          </BlueThemeProvider>
         </ShopkeeperProvider>
       </StoreProvider>
     </AuthProvider>

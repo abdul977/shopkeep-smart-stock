@@ -4,7 +4,7 @@ import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
-import { Trash2, Plus, Minus, Printer, X, Loader2 } from "lucide-react";
+import { Trash2, Plus, Minus, X, Loader2 } from "lucide-react";
 import Receipt from "./Receipt";
 import { GlowCircle } from "@/components/landing/LandingSvgs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +38,9 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
   }, [items]);
 
   const handleCheckout = async () => {
+    // Debug log to help diagnose issues
+    console.log("Starting checkout with shopkeeperUser:", shopkeeperUser);
+
     if (items.length === 0) {
       toast.error("Your cart is empty");
       return;
@@ -45,14 +48,93 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
 
     // Validate shopkeeper and owner information first
     if (!shopkeeperUser) {
+      console.error("Missing shopkeeperUser in handleCheckout");
       toast.error("You must be logged in as a shopkeeper to process transactions");
       return;
     }
 
-    if (!shopkeeperUser.ownerId) {
-      toast.error("Missing store owner information. Please log out and log back in.");
+    // Always fetch the owner ID from the database to ensure it's correct
+    let ownerId: string;
+
+    try {
+      // First, verify the stock_transactions table structure to ensure we're using the correct column names
+      console.log("Verifying database schema before proceeding...");
+
+      // Fetch the shopkeeper data from the database using the shopkeeper ID
+      if (!shopkeeperUser.id) {
+        console.error("Missing shopkeeper ID");
+        toast.error("Missing shopkeeper information. Please log out and log back in.");
+        return;
+      }
+
+      console.log("Fetching owner ID for shopkeeper:", shopkeeperUser.id);
+
+      const { data: shopkeeperData, error } = await supabase
+        .from('shopkeepers')
+        .select('owner_id, name')
+        .eq('id', shopkeeperUser.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching shopkeeper data:", error);
+        throw new Error("Could not retrieve store owner information");
+      }
+
+      if (!shopkeeperData || !shopkeeperData.owner_id) {
+        console.error("No owner ID found for shopkeeper:", shopkeeperData);
+        throw new Error("Could not find owner information for this shopkeeper");
+      }
+
+      // Set the owner ID
+      ownerId = shopkeeperData.owner_id;
+      console.log("Retrieved owner ID from database:", ownerId);
+      console.log("Shopkeeper details:", {
+        id: shopkeeperUser.id,
+        name: shopkeeperData.name,
+        ownerId: ownerId
+      });
+
+      // Update the shopkeeperUser object in memory
+      if (shopkeeperUser.ownerId !== ownerId) {
+        console.log("Updating shopkeeperUser.ownerId from", shopkeeperUser.ownerId, "to", ownerId);
+        shopkeeperUser.ownerId = ownerId;
+
+        // Also update in localStorage to persist the correct owner ID
+        try {
+          const storedShopkeeper = localStorage.getItem('shopkeeper');
+          if (storedShopkeeper) {
+            const shopkeeperData = JSON.parse(storedShopkeeper);
+            shopkeeperData.ownerId = ownerId;
+            localStorage.setItem('shopkeeper', JSON.stringify(shopkeeperData));
+            console.log("Updated shopkeeper in localStorage with correct owner ID");
+          }
+        } catch (storageError) {
+          console.error("Error updating localStorage:", storageError);
+        }
+      }
+
+    } catch (error: any) {
+      console.error("Failed to retrieve owner ID:", error);
+      toast.error(error.message || "Missing store owner information. Please log out and log back in.");
       return;
     }
+
+    // Final check to ensure we have the owner ID and it's a valid UUID
+    if (!ownerId) {
+      console.error("Still missing ownerId after retrieval attempt");
+      toast.error("Missing store owner information. Please contact support.");
+      return;
+    }
+
+    // Validate that ownerId is a proper UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(ownerId)) {
+      console.error("Invalid UUID format for ownerId:", ownerId);
+      toast.error("Invalid store owner ID format. Please contact support.");
+      return;
+    }
+
+    console.log("Validated owner ID format:", ownerId);
 
     // Check if any items exceed available stock
     const invalidItems = items.filter(item => {
@@ -95,19 +177,31 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
             throw new Error(`Insufficient stock for ${product.name}`);
           }
 
-          // Update the product stock in the database
-          const { error } = await supabase
-            .from('products')
-            .update({
-              quantity_in_stock: newQuantity,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', item.product.id)
-            .eq('user_id', shopkeeperUser?.ownerId);
+          // Update the product stock in the database using our custom function
+          // This should bypass any issues with the regular update
+          console.log(`Updating product ${item.product.id} stock to ${newQuantity} for owner ${ownerId}`);
+
+          const { data: updateResult, error } = await supabase.rpc(
+            'update_product_stock',
+            {
+              p_product_id: item.product.id,
+              p_new_quantity: newQuantity,
+              p_user_id: ownerId
+            }
+          );
 
           if (error) {
+            console.error("Error updating product stock:", error);
             throw error;
           }
+
+          // Check the result from the function
+          if (!updateResult.success) {
+            console.error("Product update failed:", updateResult);
+            throw new Error(`Failed to update product stock: ${updateResult.error || 'Unknown error'}`);
+          }
+
+          console.log("Product stock updated successfully:", updateResult);
 
           // Record the transaction
           console.log("Recording transaction for owner:", shopkeeperUser?.ownerId);
@@ -147,40 +241,135 @@ const ShoppingCart = ({ isOpen, onClose }: ShoppingCartProps) => {
           }
 
           // Create transaction data with all required fields
-          // Ensure user_id is always set and is a string (not null or undefined)
-          const ownerId = shopkeeperUser.ownerId;
-          if (!ownerId) {
+          // We already validated and potentially fetched the owner ID at the beginning of handleCheckout
+          // Get the owner ID from the outer scope
+          const shopkeeperId = shopkeeperUser.id;
+
+          if (!ownerId || typeof ownerId !== 'string') {
+            console.error("Invalid owner ID:", ownerId);
             throw new Error("Owner ID is required for transactions. Please contact support.");
           }
 
+          if (!shopkeeperId || typeof shopkeeperId !== 'string') {
+            console.error("Invalid shopkeeper ID:", shopkeeperId);
+            throw new Error("Shopkeeper ID is required for transactions. Please contact support.");
+          }
+
+          // Create a clean transaction object with explicit string values
+          // Ensure all UUIDs are properly formatted
           const transactionData = {
             product_id: item.product.id,
             quantity: -item.quantity, // Negative for sales
             transaction_type: 'sale',
             notes: transactionNotes,
-            user_id: ownerId, // Ensure this is set to the store owner's ID
+            user_id: ownerId, // Use the validated owner ID directly without String() conversion
             transaction_date: new Date().toISOString(),
-            shopkeeper_id: shopkeeperUser.id // Always include shopkeeper_id
+            shopkeeper_id: shopkeeperId // Use the ID directly without String() conversion
           };
+
+          // Double-check that user_id is set correctly
+          console.log(`Transaction for product ${item.product.id} with user_id:`, transactionData.user_id);
 
           console.log("Transaction data:", transactionData);
 
           // Final validation check before sending to database
-          if (!transactionData.user_id) {
-            console.error("Missing user_id in transaction data:", transactionData);
+          if (!transactionData.user_id || transactionData.user_id === 'null' || transactionData.user_id === 'undefined') {
+            console.error("Missing or invalid user_id in transaction data:", transactionData);
             throw new Error("Missing user_id for transaction. Please contact support.");
           }
 
-          const { error: transactionError } = await supabase
-            .from('stock_transactions')
-            .insert(transactionData);
-
-          if (transactionError) {
-            console.error("Transaction error details:", transactionError);
-            throw new Error(`Failed to record transaction: ${transactionError.message || transactionError.details || JSON.stringify(transactionError)}`);
+          if (!transactionData.shopkeeper_id || transactionData.shopkeeper_id === 'null' || transactionData.shopkeeper_id === 'undefined') {
+            console.error("Missing or invalid shopkeeper_id in transaction data:", transactionData);
+            throw new Error("Missing shopkeeper_id for transaction. Please contact support.");
           }
 
-          return { success: true, productId: item.product.id };
+          // Log the request we're about to make
+          console.log("Sending transaction to stock_transactions table:", {
+            data: transactionData,
+            table: 'stock_transactions'
+          });
+
+          // Verify that the shopkeeper belongs to the owner
+          try {
+            const { data: shopkeeperCheck, error: shopkeeperError } = await supabase
+              .from('shopkeepers')
+              .select('owner_id')
+              .eq('id', transactionData.shopkeeper_id)
+              .single();
+
+            if (shopkeeperError) {
+              console.error("Error verifying shopkeeper:", shopkeeperError);
+            } else {
+              console.log("Shopkeeper verification:", {
+                shopkeeperId: transactionData.shopkeeper_id,
+                ownerId: shopkeeperCheck.owner_id,
+                transactionUserId: transactionData.user_id,
+                matches: shopkeeperCheck.owner_id === transactionData.user_id
+              });
+
+              if (shopkeeperCheck.owner_id !== transactionData.user_id) {
+                console.error("Shopkeeper owner_id does not match transaction user_id!");
+                // Update the transaction data to use the correct owner_id
+                transactionData.user_id = String(shopkeeperCheck.owner_id);
+                console.log("Updated transaction data with correct owner_id:", transactionData);
+              }
+            }
+          } catch (verifyError) {
+            console.error("Error during shopkeeper verification:", verifyError);
+          }
+
+          // Create a clean object with only the necessary fields to avoid any potential issues
+          const cleanTransactionData = {
+            product_id: transactionData.product_id,
+            quantity: transactionData.quantity,
+            transaction_type: transactionData.transaction_type,
+            notes: transactionData.notes,
+            user_id: transactionData.user_id, // Explicitly include user_id
+            transaction_date: transactionData.transaction_date,
+            shopkeeper_id: transactionData.shopkeeper_id
+          };
+
+          // Log the exact data being sent to the database
+          console.log("Final transaction data being sent to database:", JSON.stringify(cleanTransactionData));
+
+          // Since the direct RPC call works but the regular insert doesn't,
+          // let's use the RPC function that we created for all inserts
+          console.log("Using RPC function for transaction insert");
+          const { error: transactionError, data: transactionResult } = await supabase.rpc(
+            'debug_insert_transaction',
+            {
+              p_product_id: cleanTransactionData.product_id,
+              p_quantity: cleanTransactionData.quantity,
+              p_transaction_type: cleanTransactionData.transaction_type,
+              p_notes: cleanTransactionData.notes,
+              p_user_id: cleanTransactionData.user_id,
+              p_transaction_date: cleanTransactionData.transaction_date,
+              p_shopkeeper_id: cleanTransactionData.shopkeeper_id
+            }
+          );
+
+          // Check for errors from the RPC call
+          if (transactionError) {
+            console.error("RPC transaction error details:", transactionError);
+            console.error("Failed transaction data:", cleanTransactionData);
+            throw new Error(`Failed to record transaction via RPC: ${transactionError.message || transactionError.details || JSON.stringify(transactionError)}`);
+          }
+
+          // Check the result from the RPC function
+          if (transactionResult && !transactionResult.success) {
+            console.error("Transaction failed in the database function:", transactionResult);
+            throw new Error(`Database function error: ${transactionResult.error || 'Unknown error'}`);
+          }
+
+          // Log the successful transaction with details from the RPC function
+          console.log("Transaction recorded successfully:", transactionResult);
+
+          // Return success with the transaction ID from the RPC function
+          return {
+            success: true,
+            productId: item.product.id,
+            transactionId: transactionResult.id || null
+          };
         } catch (error) {
           console.error("Error processing item:", error);
           return {

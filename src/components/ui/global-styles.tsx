@@ -14,7 +14,7 @@ export const PageBackground = ({
   className = "",
   withGlow = true,
   withWave = false,
-  darkMode = false,
+  darkMode = true, // Default to dark mode (blue theme)
 }: PageBackgroundProps) => {
   return (
     <div className={`relative overflow-hidden ${darkMode ? "bg-[#0f0a1e] text-white" : "bg-white text-gray-900"} ${className}`}>
