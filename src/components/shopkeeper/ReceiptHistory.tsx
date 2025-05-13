@@ -1,226 +1,328 @@
-import { useState, useEffect, useRef } from "react";
-import { format } from 'date-fns';
-import { useCart } from "@/contexts/CartContext";
-import { useStore } from "@/contexts/StoreContext";
-import { useReactToPrint } from 'react-to-print';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-} from "@/components/ui/drawer"
+import { useState, useEffect } from "react";
+import { useCart, SavedReceipt, CartItem } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { Receipt } from "@/types/sales";
+import { format } from "date-fns";
+import { Receipt as ReceiptIcon, X, Search, Calendar, ChevronDown, Loader2 } from "lucide-react";
+import Receipt from "./Receipt";
+import { GlowCircle } from "@/components/landing/LandingSvgs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { Product } from "@/types/inventory";
 import { toast } from "sonner";
-import { Download, Printer, Loader2 } from "lucide-react";
 
 interface ReceiptHistoryProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ReceiptHistory: React.FC<ReceiptHistoryProps> = ({ isOpen, onClose }) => {
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
-  const [isPrinting, setIsPrinting] = useState(false);
-  const { storeSettings } = useStore();
-  const componentRef = useRef<HTMLDivElement>(null);
-  const { clearCart } = useCart();
+const ReceiptHistory = ({ isOpen, onClose }: ReceiptHistoryProps) => {
+  const { savedReceipts } = useCart();
+  const { user, shopkeeperUser } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "total">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [selectedReceipt, setSelectedReceipt] = useState<SavedReceipt | null>(null);
+  const [dbReceipts, setDbReceipts] = useState<SavedReceipt[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch receipts from database
   useEffect(() => {
-    const fetchReceipts = async (): Promise<void> => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('sales_receipts')
-          .select('*')
-          .order('created_at', { ascending: false });
+    if (isOpen) {
+      fetchReceiptsFromDatabase();
+    }
+  }, [isOpen]);
 
-        if (error) {
-          console.error("Error fetching receipts:", error);
-          toast.error("Failed to load receipt history");
-        } else {
-          setReceipts(data);
-        }
-      } catch (error) {
-        console.error("Error fetching receipts:", error);
-        toast.error("Failed to load receipt history");
-      } finally {
-        setLoading(false);
+  const fetchReceiptsFromDatabase = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Determine the user ID to use for fetching data
+      const userId = shopkeeperUser?.ownerId || user?.id;
+
+      if (!userId) {
+        throw new Error("No user ID available");
       }
-    };
 
-    fetchReceipts();
-  }, []);
+      // Fetch sales transactions grouped by receipt number
+      const { data, error } = await supabase
+        .from('stock_transactions')
+        .select(`
+          id,
+          quantity,
+          transaction_date,
+          notes,
+          products(id, name, unit_price, unit, image_url)
+        `)
+        .eq('user_id', userId)
+        .eq('transaction_type', 'sale')
+        .lt('quantity', 0) // Sales are recorded as negative quantities
+        .order('transaction_date', { ascending: false });
 
-  const handleReceiptClick = (receipt: Receipt) => {
+      if (error) {
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        setDbReceipts([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Group transactions by receipt number
+      const receiptMap = new Map<string, any[]>();
+
+      data.forEach(transaction => {
+        // Extract receipt number from notes
+        const notesText = transaction.notes || '';
+        const receiptMatch = notesText.match(/Receipt #(REC-\d+)/);
+        const receiptNumber = receiptMatch ? receiptMatch[1] : `REC-${Date.now().toString().slice(-8)}`;
+
+        // Extract shopkeeper name from notes
+        const shopkeeperMatch = notesText.match(/Shopkeeper: ([^,]+)/);
+        const cashierName = shopkeeperMatch ? shopkeeperMatch[1] : 'Unknown';
+
+        if (!receiptMap.has(receiptNumber)) {
+          receiptMap.set(receiptNumber, []);
+        }
+
+        receiptMap.get(receiptNumber)?.push({
+          ...transaction,
+          receiptNumber,
+          cashierName
+        });
+      });
+
+      // Convert map to array of receipts
+      const receipts: SavedReceipt[] = Array.from(receiptMap.entries()).map(([receiptNumber, transactions]) => {
+        // Calculate total and create items array
+        let total = 0;
+        const items: CartItem[] = transactions.map(transaction => {
+          const product: Product = {
+            id: transaction.products.id,
+            name: transaction.products.name,
+            unitPrice: transaction.products.unit_price,
+            unit: transaction.products.unit,
+            imageUrl: transaction.products.image_url,
+            quantityInStock: 0, // Not needed for receipt display
+            minStockLevel: 0, // Not needed for receipt display
+            sku: '', // Not needed for receipt display
+            categoryId: '', // Not needed for receipt display
+            createdAt: new Date(), // Not needed for receipt display
+            updatedAt: new Date() // Not needed for receipt display
+          };
+
+          const quantity = Math.abs(transaction.quantity);
+          total += product.unitPrice * quantity;
+
+          return {
+            product,
+            quantity,
+            id: transaction.id
+          };
+        });
+
+        return {
+          id: receiptNumber,
+          receiptNumber,
+          items,
+          total,
+          date: new Date(transactions[0].transaction_date),
+          cashierName: transactions[0].cashierName,
+          paymentMethod: 'Cash' // Default payment method
+        };
+      });
+
+      setDbReceipts(receipts);
+    } catch (err: any) {
+      console.error("Error fetching receipts:", err);
+      setError(err.message);
+      toast.error(`Failed to load receipts: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Combine database receipts with local storage receipts
+  const allReceipts = [...dbReceipts, ...savedReceipts];
+
+  // Filter and sort receipts
+  const filteredReceipts = allReceipts
+    .filter((receipt) => {
+      if (!searchTerm) return true;
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        receipt.receiptNumber.toLowerCase().includes(searchLower) ||
+        receipt.items.some((item) => item.product.name.toLowerCase().includes(searchLower))
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === "date") {
+        return sortOrder === "asc"
+          ? a.date.getTime() - b.date.getTime()
+          : b.date.getTime() - a.date.getTime();
+      } else {
+        return sortOrder === "asc" ? a.total - b.total : b.total - a.total;
+      }
+    });
+
+  const handleViewReceipt = (receipt: SavedReceipt) => {
     setSelectedReceipt(receipt);
   };
 
-  const handleCloseReceipt = () => {
-    setSelectedReceipt(null);
-  };
-
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-    onBeforePrint: () => setIsPrinting(true),
-    onAfterPrint: () => setIsPrinting(false),
-  });
-
-  const downloadReceipt = async () => {
-    if (!selectedReceipt) {
-      toast.error("No receipt selected to download.");
-      return;
-    }
-
-    try {
-      const receiptContent = generateReceiptContent(selectedReceipt);
-      const blob = new Blob([receiptContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `receipt_${selectedReceipt.id}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      toast.success("Receipt downloaded successfully!");
-    } catch (error) {
-      console.error("Error downloading receipt:", error);
-      toast.error("Failed to download receipt.");
-    }
-  };
-
-  const generateReceiptContent = (receipt: Receipt): string => {
-    let content = `Receipt ID: ${receipt.id}\n`;
-    content += `Date: ${format(new Date(receipt.created_at), 'yyyy-MM-dd HH:mm:ss')}\n`;
-    content += `Store: ${storeSettings?.storeName || "SmartStock"}\n`;
-    content += `------------------------------------------------\n`;
-    content += `Items:\n`;
-
-    try {
-      const items = JSON.parse(receipt.items) as { product_name: string; quantity: number; unit_price: number; }[];
-      items.forEach(item => {
-        content += `${item.product_name} x ${item.quantity} - ${formatCurrency(item.unit_price * item.quantity)}\n`;
-      });
-    } catch (error) {
-      console.error("Error parsing receipt items:", error);
-      content += "Error displaying items\n";
-    }
-
-    content += `------------------------------------------------\n`;
-    content += `Total: ${formatCurrency(receipt.total)}\n`;
-    return content;
-  };
+  if (!isOpen) {
+    return null;
+  }
 
   return (
-    <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] border-l border-blue-900/30">
-        <DrawerHeader>
-          <DrawerTitle className="text-blue-200">Receipt History</DrawerTitle>
-          <DrawerClose className="text-blue-300 hover:text-blue-100" />
-        </DrawerHeader>
-        <div className="p-4">
-          {loading ? (
-            <div className="flex items-center justify-center">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin text-blue-300" />
-              <p className="text-blue-300">Loading receipts...</p>
-            </div>
-          ) : receipts.length === 0 ? (
-            <p className="text-blue-300">No receipts found.</p>
-          ) : (
-            <div className="space-y-2">
-              {receipts.map((receipt) => (
-                <Button
-                  key={receipt.id}
-                  variant="ghost"
-                  className="w-full justify-between text-blue-300 hover:bg-blue-900/30"
-                  onClick={() => handleReceiptClick(receipt)}
-                >
-                  Receipt #{receipt.id}
-                  <span className="text-sm">{format(new Date(receipt.created_at), 'yyyy-MM-dd HH:mm')}</span>
-                </Button>
-              ))}
-            </div>
-          )}
+    <>
+      <div
+        className="fixed inset-0 z-[500] bg-black/80 animate-in fade-in-0 duration-200 data-[state=closed]:pointer-events-none"
+        onClick={onClose}
+      />
+      <div className="fixed inset-y-0 right-0 z-[502] h-full w-[90%] sm:max-w-md p-4 sm:p-6 bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] text-white border-l border-blue-900/30 overflow-y-auto animate-in slide-in-from-right duration-300">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-md opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1.5 bg-blue-900/50 border border-blue-700/30 text-blue-200 z-50"
+        >
+          <X className="h-5 w-5" />
+          <span className="sr-only">Close</span>
+        </button>
+
+        {/* Background effects */}
+        <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 fixed -top-20 -right-20" />
+        <GlowCircle className="w-[200px] h-[200px] bg-blue-800/20 fixed bottom-20 -left-20" />
+
+        <div className="mb-4 relative z-10 flex flex-col space-y-2 text-center sm:text-left">
+          <h2 className="text-lg font-semibold text-center sm:text-left bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">Receipt History</h2>
+          <p className="text-sm text-center sm:text-left text-blue-200">
+            View your past transactions
+          </p>
         </div>
 
-        {/* Receipt Details */}
-        {selectedReceipt && (
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0f0a1e] z-10">
-            <div className="p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <Button onClick={handleCloseReceipt} variant="ghost" className="text-blue-300 hover:text-blue-100">
-                  Back to History
-                </Button>
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={downloadReceipt}
-                    variant="outline"
-                    className="text-blue-300 border-blue-700/50 bg-blue-900/30 hover:bg-blue-800/50"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                  <Button
-                    onClick={handlePrint}
-                    disabled={isPrinting}
-                    variant="outline"
-                    className="text-blue-300 border-blue-700/50 bg-blue-900/30 hover:bg-blue-800/50"
-                  >
-                    {isPrinting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Printing...
-                      </>
-                    ) : (
-                      <>
-                        <Printer className="h-4 w-4 mr-2" />
-                        Print Receipt
-                      </>
+        {/* Search and filters */}
+        <div className="mb-4 relative z-10">
+          <div className="flex gap-2 mb-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-blue-400" />
+              <Input
+                placeholder="Search receipts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 bg-blue-900/30 border-blue-700/30 text-blue-100 placeholder:text-blue-400/70"
+              />
+            </div>
+            <Select
+              value={sortOrder}
+              onValueChange={(value) => setSortOrder(value as "asc" | "desc")}
+            >
+              <SelectTrigger className="w-[100px] bg-blue-900/30 border-blue-700/30 text-blue-100">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent className="bg-blue-900 border-blue-700 text-blue-100">
+                <SelectItem value="desc">Newest</SelectItem>
+                <SelectItem value="asc">Oldest</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center relative z-10 py-8">
+            <div className="bg-blue-900/40 p-5 rounded-full mb-5 border border-blue-700/30">
+              <Loader2 className="h-10 w-10 text-blue-400 animate-spin" />
+            </div>
+            <h3 className="text-xl font-medium mb-2 text-blue-100">Loading receipts</h3>
+            <p className="text-blue-200 mb-6 max-w-[250px]">
+              Fetching your transaction history...
+            </p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center relative z-10 py-8">
+            <div className="bg-blue-900/40 p-5 rounded-full mb-5 border border-blue-700/30">
+              <X className="h-10 w-10 text-red-400" />
+            </div>
+            <h3 className="text-xl font-medium mb-2 text-blue-100">Error loading receipts</h3>
+            <p className="text-blue-200 mb-6 max-w-[250px]">{error}</p>
+            <Button
+              onClick={fetchReceiptsFromDatabase}
+              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : filteredReceipts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center relative z-10 py-8">
+            <div className="bg-blue-900/40 p-5 rounded-full mb-5 border border-blue-700/30">
+              <ReceiptIcon className="h-10 w-10 text-blue-400" />
+            </div>
+            <h3 className="text-xl font-medium mb-2 text-blue-100">No receipts found</h3>
+            <p className="text-blue-200 mb-6 max-w-[250px]">
+              {allReceipts.length === 0
+                ? "You haven't made any sales yet"
+                : "No receipts match your search"}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3 relative z-10">
+            {filteredReceipts.map((receipt) => (
+              <div
+                key={receipt.id}
+                className="bg-blue-900/30 p-3 rounded-md border border-blue-700/30 hover:bg-blue-800/30 cursor-pointer transition-colors"
+                onClick={() => handleViewReceipt(receipt)}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-medium text-sm text-blue-100">Receipt #{receipt.receiptNumber}</h4>
+                    <p className="text-xs text-blue-300 flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {format(receipt.date, "dd/MM/yyyy HH:mm")}
+                    </p>
+                    {receipt.cashierName && (
+                      <p className="text-xs text-blue-300">
+                        Cashier: {receipt.cashierName}
+                      </p>
                     )}
-                  </Button>
+                  </div>
+                  <span className="text-sm font-medium text-blue-100">
+                    {formatCurrency(receipt.total)}
+                  </span>
+                </div>
+                <div className="text-xs text-blue-300">
+                  {receipt.items.length} {receipt.items.length === 1 ? "item" : "items"}
                 </div>
               </div>
-
-              <div ref={componentRef} className="flex-grow overflow-auto p-4 bg-blue-900/20 rounded-md border border-blue-800/30 text-blue-200">
-                <h3 className="text-lg font-semibold mb-2">Receipt Details</h3>
-                <p>Receipt ID: {selectedReceipt.id}</p>
-                <p>Date: {format(new Date(selectedReceipt.created_at), 'yyyy-MM-dd HH:mm:ss')}</p>
-                <p>Store: {storeSettings?.storeName || "SmartStock"}</p>
-                <hr className="my-2 border-blue-800/50" />
-                <p className="font-medium">Items:</p>
-                <ul className="list-none pl-0">
-                  {(() => {
-                    try {
-                      const items = JSON.parse(selectedReceipt.items) as {
-                        product_name: string;
-                        quantity: number;
-                        unit_price: number;
-                      }[];
-                      return items.map((item, index) => (
-                        <li key={index} className="mb-1">
-                          {item.product_name} x {item.quantity} - {formatCurrency(item.unit_price * item.quantity)}
-                        </li>
-                      ));
-                    } catch (error) {
-                      console.error("Error parsing receipt items:", error);
-                      return <li>Error displaying items</li>;
-                    }
-                  })()}
-                </ul>
-                <hr className="my-2 border-blue-800/50" />
-                <div className="font-bold">Total: {formatCurrency(selectedReceipt.total)}</div>
-              </div>
-            </div>
+            ))}
           </div>
         )}
-      </DrawerContent>
-    </Drawer>
+      </div>
+
+      {selectedReceipt && (
+        <Receipt
+          data={selectedReceipt}
+          onClose={() => setSelectedReceipt(null)}
+        />
+      )}
+    </>
   );
 };
 

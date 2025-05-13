@@ -1,41 +1,41 @@
-
 /**
  * Theme utility functions for SmartStock application
- * Provides functions to apply warm color scheme consistently across the application
+ * Provides functions to apply blue color scheme consistently across the application
  */
 
 /**
- * Warm theme color values based on the Golden Sand, Sunset Amber, Burnt Sienna, and Dark Cognac
+ * Blue theme color values
+ * These match the existing blue theme used in the application
  */
 export const blueThemeColors = {
   // Background colors
   background: {
-    dark: '#5b3228', // Dark Cognac
-    medium: '#b55233', // Burnt Sienna
-    light: '#ff9e4f', // Sunset Amber
-    gradient: 'linear-gradient(to bottom right, #b55233, #5b3228)', // Gradient background
+    dark: '#0f0a1e', // Dark blue background
+    medium: '#1a1a2e', // Medium blue background
+    light: '#2a2a4e', // Lighter blue background
+    gradient: 'linear-gradient(to bottom right, #1a1a2e, #0f0a1e)', // Gradient background
   },
   
   // Card and container backgrounds
   card: {
-    dark: 'rgba(91, 50, 40, 0.8)', // Dark Cognac with transparency
-    medium: 'rgba(181, 82, 51, 0.6)', // Burnt Sienna with transparency
-    light: 'rgba(255, 229, 180, 0.1)', // Golden Sand with transparency
-    gradient: 'linear-gradient(to bottom right, rgba(181, 82, 51, 0.6), rgba(91, 50, 40, 0.4))', // Gradient card background
+    dark: 'rgba(26, 26, 46, 0.8)', // Dark blue card background with transparency
+    medium: 'rgba(42, 42, 78, 0.6)', // Medium blue card background with transparency
+    light: 'rgba(59, 130, 246, 0.1)', // Light blue card background with transparency
+    gradient: 'linear-gradient(to bottom right, rgba(26, 26, 46, 0.6), rgba(15, 10, 30, 0.4))', // Gradient card background
   },
   
   // Border colors
   border: {
-    dark: 'rgba(91, 50, 40, 0.5)', // Dark Cognac border
-    medium: 'rgba(181, 82, 51, 0.3)', // Burnt Sienna border
-    light: 'rgba(255, 158, 79, 0.2)', // Sunset Amber border
+    dark: 'rgba(30, 58, 138, 0.5)', // Dark blue border
+    medium: 'rgba(59, 130, 246, 0.3)', // Medium blue border
+    light: 'rgba(96, 165, 250, 0.2)', // Light blue border
   },
   
   // Text colors for proper contrast
   text: {
     primary: '#ffffff', // White text for dark backgrounds
-    secondary: 'rgba(255, 229, 180, 0.8)', // Golden Sand text with slight transparency
-    muted: 'rgba(255, 244, 224, 0.6)', // Lighter Golden Sand text
+    secondary: 'rgba(219, 234, 254, 0.8)', // Light blue text with slight transparency
+    muted: 'rgba(186, 230, 253, 0.6)', // Muted light blue text
   }
 };
 
