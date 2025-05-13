@@ -21,83 +21,103 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
+import { WelcomeDialog } from "./components/welcome/WelcomeDialog";
+import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <StoreProvider>
-        <ShopkeeperProvider>
-          <BlueThemeProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
+const App = () => {
+  const [showWelcome, setShowWelcome] = useState(false);
+  
+  useEffect(() => {
+    // Check if user has visited before
+    const userInfo = localStorage.getItem("userInfo");
+    if (!userInfo) {
+      // Only show after a slight delay to ensure page has loaded properly
+      const timer = setTimeout(() => {
+        setShowWelcome(true);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
-                {/* Protected routes */}
-                <Route
-                  path="/dashboard/*"
-                  element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/manage-shopkeepers"
-                  element={
-                    <ProtectedRoute>
-                      <ManageShopkeepers />
-                    </ProtectedRoute>
-                  }
-                />
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <StoreProvider>
+          <ShopkeeperProvider>
+            <BlueThemeProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <WelcomeDialog open={showWelcome} onOpenChange={setShowWelcome} />
+                <BrowserRouter>
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
 
-              {/* Shop routes - Order matters! More specific routes first */}
-              {/* Special route for direct user ID access */}
-              <Route
-                path="/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87"
-                element={<Shopkeeper />}
-              />
-              <Route path="/shop/:shareId" element={<Shopkeeper />} />
-              <Route path="/shop" element={<Shopkeeper />} />
+                    {/* Protected routes */}
+                    <Route
+                      path="/dashboard/*"
+                      element={
+                        <ProtectedRoute>
+                          <Index />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/manage-shopkeepers"
+                      element={
+                        <ProtectedRoute>
+                          <ManageShopkeepers />
+                        </ProtectedRoute>
+                      }
+                    />
 
-              {/* Shopkeeper routes */}
-              <Route path="/shopkeeper-login/:storeId?" element={<ShopkeeperLogin />} />
-              <Route
-                path="/shopkeeper-dashboard"
-                element={
-                  <ShopkeeperProtectedRoute>
-                    <ShopkeeperDashboard />
-                  </ShopkeeperProtectedRoute>
-                }
-              />
-              <Route
-                path="/shopkeeper-pos"
-                element={
-                  <ShopkeeperProtectedRoute>
-                    <ShopkeeperPOS />
-                  </ShopkeeperProtectedRoute>
-                }
-              />
+                    {/* Shop routes - Order matters! More specific routes first */}
+                    {/* Special route for direct user ID access */}
+                    <Route
+                      path="/shop/5c0d304b-5b84-48a4-a9af-dd0d182cde87"
+                      element={<Shopkeeper />}
+                    />
+                    <Route path="/shop/:shareId" element={<Shopkeeper />} />
+                    <Route path="/shop" element={<Shopkeeper />} />
 
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            </BrowserRouter>
-            </TooltipProvider>
-          </BlueThemeProvider>
-        </ShopkeeperProvider>
-      </StoreProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+                    {/* Shopkeeper routes */}
+                    <Route path="/shopkeeper-login/:storeId?" element={<ShopkeeperLogin />} />
+                    <Route
+                      path="/shopkeeper-dashboard"
+                      element={
+                        <ShopkeeperProtectedRoute>
+                          <ShopkeeperDashboard />
+                        </ShopkeeperProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/shopkeeper-pos"
+                      element={
+                        <ShopkeeperProtectedRoute>
+                          <ShopkeeperPOS />
+                        </ShopkeeperProtectedRoute>
+                      }
+                    />
+
+                    {/* Catch-all route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </BlueThemeProvider>
+          </ShopkeeperProvider>
+        </StoreProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
