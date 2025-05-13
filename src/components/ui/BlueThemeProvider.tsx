@@ -1,15 +1,16 @@
+
 import { useEffect } from 'react';
 import { applyBlueTheme } from '@/lib/themeUtils';
 
 /**
  * BlueThemeProvider component
  * 
- * This component applies the blue theme to the entire application
+ * This component applies the warm theme to the entire application
  * It should be placed near the root of the application
  */
 const BlueThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
-    // Apply blue theme when the component mounts
+    // Apply warm theme when the component mounts
     applyBlueTheme();
 
     // Re-apply theme on window resize to catch any dynamically created elements

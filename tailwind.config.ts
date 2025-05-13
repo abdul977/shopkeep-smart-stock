@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -34,12 +33,12 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				inventory: {
-					primary: '#2563eb',
-					secondary: '#60a5fa',
-					accent: '#3b82f6',
-					lowStock: '#f59e0b',
-					danger: '#ef4444',
-					success: '#10b981',
+					primary: '#b55233', // Changed to Burnt Sienna
+					secondary: '#ff9e4f', // Changed to Sunset Amber
+					accent: '#ffe5b4', // Changed to Golden Sand
+					lowStock: '#ff9e4f', // Changed to Sunset Amber
+					danger: '#b55233', // Changed to Burnt Sienna
+					success: '#80a43b', // Complementary green
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
@@ -78,6 +77,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Add the new warm color palette
+				warm: {
+					goldenSand: '#ffe5b4',
+					sunsetAmber: '#ff9e4f',
+					burntSienna: '#b55233',
+					darkCognac: '#5b3228',
+					light: '#fff8e6',
+					dark: '#3a2218',
 				}
 			},
 			borderRadius: {

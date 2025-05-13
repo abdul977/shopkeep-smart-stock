@@ -1,3 +1,4 @@
+
 import React from 'react';
 import useBlueTheme from '@/hooks/useBlueTheme';
 import { blueThemeColors } from '@/lib/themeUtils';
@@ -15,8 +16,8 @@ interface BlueThemeWrapperProps {
 /**
  * BlueThemeWrapper component
  * 
- * Wraps content in a div and applies blue theme to it and its children
- * Useful for applying the blue theme to specific sections of the application
+ * Wraps content in a div and applies warm theme to it and its children
+ * Useful for applying the warm theme to specific sections of the application
  */
 const BlueThemeWrapper: React.FC<BlueThemeWrapperProps> = ({
   children,
