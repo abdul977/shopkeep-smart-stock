@@ -7,8 +7,9 @@ import { supabase } from "@/lib/supabase";
 import { PageBackground, GlowCircle } from "@/components/ui/global-styles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, ShoppingCart, LogOut, BarChart, Settings, AlertCircle, History } from "lucide-react";
+import { Package, ShoppingCart, LogOut, BarChart, Settings, AlertCircle, History, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import DisplayCards from "@/components/ui/display-cards";
 import ProductGrid from "@/components/shopkeeper/ProductGrid";
 import ShopkeeperHeader from "@/components/shopkeeper/ShopkeeperHeader";
 import ShoppingCartComponent from "@/components/shopkeeper/ShoppingCart";
@@ -254,6 +255,47 @@ const ShopkeeperDashboardContent = () => {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Display Cards Section */}
+        <div className="mb-8 mt-6">
+          <h2 className="text-lg font-bold mb-4 text-blue-100">Store Highlights</h2>
+          <DisplayCards
+            cards={[
+              {
+                icon: <Sparkles className="size-4 text-blue-300" />,
+                title: "Store Inventory",
+                description: `${products?.length || 0} products available`,
+                date: "Real-time inventory",
+                iconClassName: "text-blue-500",
+                titleClassName: "text-blue-500",
+                className: "[grid-area:stack] hover:-translate-y-10 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+              },
+              {
+                icon: <TrendingUp className="size-4 text-blue-300" />,
+                title: "Total Value",
+                description: formatCurrency(
+                  products?.reduce((total, product) =>
+                    total + (product.unitPrice * product.quantityInStock), 0) || 0,
+                  {},
+                  true
+                ),
+                date: "Current inventory value",
+                iconClassName: "text-blue-500",
+                titleClassName: "text-blue-500",
+                className: "[grid-area:stack] translate-x-12 translate-y-10 hover:-translate-y-1 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+              },
+              {
+                icon: <Zap className="size-4 text-green-300" />,
+                title: "Sales Ready",
+                description: "Start selling now",
+                date: "POS system available",
+                iconClassName: "text-green-500",
+                titleClassName: "text-green-500",
+                className: "[grid-area:stack] translate-x-24 translate-y-20 hover:translate-y-10",
+              },
+            ]}
+          />
         </div>
 
         {/* Product Search and Grid */}

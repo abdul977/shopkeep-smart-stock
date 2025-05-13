@@ -1,8 +1,11 @@
 
 import { useInventory } from "@/contexts/InventoryContext";
-import { BarChart, Package, AlertTriangle, BanknoteIcon } from "lucide-react";
+import { BarChart, Package, AlertTriangle, BanknoteIcon, Sparkles, TrendingUp, Zap, ChevronDown, ChevronUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { CardContainer } from "@/components/ui/global-styles";
+import DisplayCards from "@/components/ui/display-cards";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const Dashboard = () => {
   const { products, categories, getLowStockProducts, getTotalInventoryValue } =
@@ -10,6 +13,13 @@ const Dashboard = () => {
 
   const lowStockProducts = getLowStockProducts();
   const totalValue = getTotalInventoryValue();
+
+  // State for expanded sections
+  const [showAllLowStock, setShowAllLowStock] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // Number of items to show initially
+  const initialItemsToShow = 3;
 
   return (
     <div className="p-1 sm:p-6 animate-fade-in w-full">
@@ -72,33 +82,97 @@ const Dashboard = () => {
         </CardContainer>
       </div>
 
+      {/* Display Cards Section */}
+      <div className="mb-8 mt-4 px-1 sm:px-0">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 text-blue-100">Inventory Highlights</h2>
+        <DisplayCards
+          cards={[
+            {
+              icon: <Sparkles className="size-4 text-blue-300" />,
+              title: "Featured Products",
+              description: `${products.length} total products`,
+              date: "Updated today",
+              iconClassName: "text-blue-500",
+              titleClassName: "text-blue-500",
+              className: "[grid-area:stack] hover:-translate-y-10 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+            },
+            {
+              icon: <TrendingUp className="size-4 text-blue-300" />,
+              title: "Inventory Value",
+              description: formatCurrency(totalValue, {}, true),
+              date: "Real-time tracking",
+              iconClassName: "text-blue-500",
+              titleClassName: "text-blue-500",
+              className: "[grid-area:stack] translate-x-12 translate-y-10 hover:-translate-y-1 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+            },
+            {
+              icon: <Zap className="size-4 text-amber-300" />,
+              title: "Low Stock Alert",
+              description: `${lowStockProducts.length} items need attention`,
+              date: "Requires action",
+              iconClassName: "text-amber-500",
+              titleClassName: "text-amber-500",
+              className: "[grid-area:stack] translate-x-24 translate-y-20 hover:translate-y-10",
+            },
+          ]}
+        />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-6 px-1 sm:px-0">
         <CardContainer className="p-3 sm:p-5">
-          <div className="mb-2 sm:mb-4">
+          <div className="mb-2 sm:mb-4 flex justify-between items-center">
             <h3 className="text-base sm:text-lg font-medium text-blue-100">Low Stock Products</h3>
+            {lowStockProducts.length > initialItemsToShow && (
+              <span className="text-xs text-blue-300/70">
+                {showAllLowStock ? lowStockProducts.length : Math.min(initialItemsToShow, lowStockProducts.length)} of {lowStockProducts.length}
+              </span>
+            )}
           </div>
           <div>
             {lowStockProducts.length > 0 ? (
-              <div className="space-y-2 sm:space-y-3">
-                {lowStockProducts.map(product => (
-                  <div key={product.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 bg-blue-900/30 rounded-md border border-blue-800/50">
-                    <div className="w-full sm:w-auto">
-                      <h3 className="font-medium text-blue-100 text-sm sm:text-base truncate">{product.name}</h3>
-                      <p className="text-xs sm:text-sm text-blue-300/70 truncate">
-                        SKU: {product.sku}
-                      </p>
-                    </div>
-                    <div className="text-right mt-1 sm:mt-0 flex-shrink-0">
-                      <div className={`font-bold text-sm sm:text-base ${product.quantityInStock === 0 ? 'text-red-400' : 'text-amber-400'}`}>
-                        {product.quantityInStock} {product.unit}s
+              <>
+                <div className="space-y-2 sm:space-y-3">
+                  {(showAllLowStock ? lowStockProducts : lowStockProducts.slice(0, initialItemsToShow)).map(product => (
+                    <div key={product.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 bg-blue-900/30 rounded-md border border-blue-800/50">
+                      <div className="w-full sm:w-auto">
+                        <h3 className="font-medium text-blue-100 text-sm sm:text-base truncate">{product.name}</h3>
+                        <p className="text-xs sm:text-sm text-blue-300/70 truncate">
+                          SKU: {product.sku}
+                        </p>
                       </div>
-                      <p className="text-xs text-blue-300/70">
-                        Min: {product.minStockLevel}
-                      </p>
+                      <div className="text-right mt-1 sm:mt-0 flex-shrink-0">
+                        <div className={`font-bold text-sm sm:text-base ${product.quantityInStock === 0 ? 'text-red-400' : 'text-amber-400'}`}>
+                          {product.quantityInStock} {product.unit}s
+                        </div>
+                        <p className="text-xs text-blue-300/70">
+                          Min: {product.minStockLevel}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+
+                {lowStockProducts.length > initialItemsToShow && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full mt-3 text-blue-300 hover:text-blue-200 hover:bg-blue-800/30"
+                    onClick={() => setShowAllLowStock(!showAllLowStock)}
+                  >
+                    {showAllLowStock ? (
+                      <>
+                        <ChevronUp className="h-4 w-4 mr-2" />
+                        Show Less
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-4 w-4 mr-2" />
+                        See More ({lowStockProducts.length - initialItemsToShow} more)
+                      </>
+                    )}
+                  </Button>
+                )}
+              </>
             ) : (
               <p className="text-blue-300/70 text-center py-4 text-sm">
                 All products are sufficiently stocked!
@@ -108,11 +182,16 @@ const Dashboard = () => {
         </CardContainer>
 
         <CardContainer className="p-3 sm:p-5">
-          <div className="mb-2 sm:mb-4">
+          <div className="mb-2 sm:mb-4 flex justify-between items-center">
             <h3 className="text-base sm:text-lg font-medium text-blue-100">Category Breakdown</h3>
+            {categories.length > initialItemsToShow && (
+              <span className="text-xs text-blue-300/70">
+                {showAllCategories ? categories.length : Math.min(initialItemsToShow, categories.length)} of {categories.length}
+              </span>
+            )}
           </div>
           <div className="space-y-3 sm:space-y-4">
-            {categories.map(category => {
+            {(showAllCategories ? categories : categories.slice(0, initialItemsToShow)).map(category => {
               const categoryProducts = products.filter(
                 product => product.categoryId === category.id
               );
@@ -135,6 +214,27 @@ const Dashboard = () => {
                 </div>
               );
             })}
+
+            {categories.length > initialItemsToShow && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full mt-1 text-blue-300 hover:text-blue-200 hover:bg-blue-800/30"
+                onClick={() => setShowAllCategories(!showAllCategories)}
+              >
+                {showAllCategories ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-2" />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-2" />
+                    See More ({categories.length - initialItemsToShow} more)
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </CardContainer>
       </div>

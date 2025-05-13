@@ -433,6 +433,9 @@ const LandingContent = () => {
           </div>
           <div className="mt-8 pt-8 border-t border-blue-900/30 text-center text-blue-400/60 text-sm">
             &copy; {new Date().getFullYear()} {storeName}. All rights reserved.
+            <div className="mt-2">
+              Developed by <span className="text-blue-300">@muahib solutions</span> | <span className="text-blue-300">09025794407</span>
+            </div>
           </div>
         </div>
       </footer>
