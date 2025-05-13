@@ -235,13 +235,13 @@ const Sales = () => {
 
         // Calculate the sale amount
         const quantity = Math.abs(transaction.quantity);
-        const unitPrice = transaction.products?.unit_price || 0;
+        const unitPrice = transaction.products?.[0].unit_price || 0;
         const amount = quantity * unitPrice;
 
         // Add to processed transactions
         processedTransactions.push({
           id: transaction.id,
-          productName: transaction.products?.name || 'Unknown Product',
+          productName: transaction.products?.[0].name || 'Unknown Product',
           quantity: quantity,
           amount: amount,
           date: new Date(transaction.transaction_date),
