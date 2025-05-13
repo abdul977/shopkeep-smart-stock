@@ -3,6 +3,7 @@ import { ArrowRight, ChevronRight, Star, Search, BarChart3, LineChart, Zap, Spar
 import { useStore } from "@/contexts/StoreContext";
 import { useInventory, InventoryProvider } from "@/contexts/InventoryContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { HeroScrollSection } from "@/components/landing/HeroScrollSection";
 import {
   HeroBackground,
   FeatureIcon1,
@@ -76,46 +77,31 @@ const LandingContent = () => {
             </div>
           </nav>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center pb-16">
-            <div className="max-w-3xl z-10 relative">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                Boost your <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">inventory management</span> with AI
-              </h1>
-              <p className="text-xl mb-8 text-blue-100/80">
-                {storeName} helps you track inventory, manage products, and boost sales with
-                powerful analytics and a user-friendly interface.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                {user ? (
-                  <Link
-                    to="/dashboard"
-                    className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/30"
-                  >
-                    Go to Dashboard <ArrowRight className="ml-2" size={18} />
-                  </Link>
-                ) : (
-                  <Link
-                    to="/signup"
-                    className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/30"
-                  >
-                    Get Started <ArrowRight className="ml-2" size={18} />
-                  </Link>
-                )}
-                <Link
-                  to="/shop/demo"
-                  className="bg-transparent text-white border border-blue-500 px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-blue-900/30 transition-colors"
-                >
-                  View Shop Demo
-                </Link>
-              </div>
-            </div>
-            <div className="hidden md:block relative">
-              <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-600 rounded-full filter blur-3xl opacity-20"></div>
-              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-800 rounded-full filter blur-3xl opacity-20"></div>
-              <div className="relative z-10 transform hover:scale-105 transition-transform duration-500">
-                <DashboardSvg />
-              </div>
-            </div>
+          {/* Integrated Scroll Animation Component */}
+          <HeroScrollSection />
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 pb-16">
+            {user ? (
+              <Link
+                to="/dashboard"
+                className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/30"
+              >
+                Go to Dashboard <ArrowRight className="ml-2" size={18} />
+              </Link>
+            ) : (
+              <Link
+                to="/signup"
+                className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/30"
+              >
+                Get Started <ArrowRight className="ml-2" size={18} />
+              </Link>
+            )}
+            <Link
+              to="/shop/demo"
+              className="bg-transparent text-white border border-blue-500 px-6 py-3 rounded-md font-medium flex items-center justify-center hover:bg-blue-900/30 transition-colors"
+            >
+              View Shop Demo
+            </Link>
           </div>
         </div>
       </header>
