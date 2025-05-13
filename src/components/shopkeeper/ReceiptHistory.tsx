@@ -32,7 +32,7 @@ const ReceiptHistory: React.FC<ReceiptHistoryProps> = ({ isOpen, onClose }) => {
   const { clearCart } = useCart();
 
   useEffect(() => {
-    const fetchReceipts = async () => {
+    const fetchReceipts = async (): Promise<void> => {
       setLoading(true);
       try {
         const { data, error } = await supabase
